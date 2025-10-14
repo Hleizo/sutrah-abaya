@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sutrah Abaya — ستـرة</title>
+  <meta name="description" content="Sutrah Abaya — elegant, modest abayas with delivery in Jordan and Palestine." />
+  <link rel="preload" href="assets/css/styles.css" as="style" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="logo" href="#/">سترة • SUTRAH</a>
+      <nav aria-label="Primary">
+        <a href="#/" data-link>Home</a>
+        <a href="#/shop" data-link>Shop</a>
+        <a href="#/cart" data-link class="cart-link">
+          Cart <span id="cart-count" class="badge">0</span>
+        </a>
+        <a href="#/contact" data-link>Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" class="app container" tabindex="-1" aria-live="polite"></main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h4>About Sutrah</h4>
+        <p>عبايات إماراتية فاخرة — أناقتكِ في سترك. Delivery in Jordan 🇯🇴 & Palestine 🇵🇸.</p>
+      </div>
+      <div>
+        <h4>Help</h4>
+        <ul>
+          <li><a href="#/policy/shipping">Shipping</a></li>
+          <li><a href="#/policy/returns">Returns</a></li>
+          <li><a href="#/policy/privacy">Privacy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <p><strong>WhatsApp / Phone:</strong> <a href="https://wa.me/962795178746" target="_blank" rel="noopener">+962 79 517 8746</a></p>
+        <form id="newsletter-form" class="newsletter" autocomplete="on">
+          <label class="sr-only" for="newsletter-email">Email</label>
+          <input id="newsletter-email" name="email" type="email" placeholder="you@example.com" required />
+          <button type="submit">Join</button>
+        </form>
+        <small>© <span id="year"></span> Sutrah Abaya. All rights reserved.</small>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/products.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
