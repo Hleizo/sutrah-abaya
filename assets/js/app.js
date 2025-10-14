@@ -1,22 +1,26 @@
-/* SPA router + UI logic + cart. */
+/* Sutrah Abaya — Arabic SPA (RTL)
+   - صفحات: الرئيسية، المتجر، المنتج، السلة، الدفع، من نحن، التوصيل لفلسطين، السياسات، تواصل
+   - دفع عبر واتساب: يرسل تفاصيل الطلب إلى +962 79 517 8746
+*/
+
 (() => {
-  const $ = (sel, ctx=document) => ctx.querySelector(sel);
+  const $  = (sel, ctx=document) => ctx.querySelector(sel);
   const $$ = (sel, ctx=document) => [...ctx.querySelectorAll(sel)];
 
   const app = $("#app");
   const toast = $("#toast");
   const cartCount = $("#cart-count");
 
-  const PHONE = "+962795178746"; // used in contact & checkout help
+  const PHONE_E164 = "962795178746";         // بدون +
+  const PHONE_READ = "+962 79 517 8746";
 
   const state = {
-    cart: load("cart", []),      // [{id, size, color, qty}]
-    filters: { q:"", cat:"All", sort:"popular" }
+    cart: load("cart", []),                   // [{id, size, color, qty}]
+    filters: { q:"", cat:"الكل", sort:"popular" }
   };
 
-  function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
-  function load(key, fallback){ try{ return JSON.parse(localStorage.getItem(key)) ?? fallback }catch{ return fallback } }
-
+  function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+  function load(k, f){ try{ return JSON.parse(localStorage.getItem(k)) ?? f }catch{ return f } }
   function money(n){ return "د.أ " + n.toFixed(2); }
 
   function showToast(msg){
@@ -25,22 +29,23 @@
     setTimeout(()=> toast.classList.remove("show"), 2500);
   }
 
-  function setYear(){ $("#year").textContent = new Date().getFullYear(); }
-  setYear();
+  // Footer year + newsletter
+  (function() {
+    const y = $("#year"); if(y) y.textContent = new Date().getFullYear();
+    const nf = $("#newsletter-form");
+    if(nf) nf.addEventListener("submit", e => { e.preventDefault(); showToast("تم الاشتراك بنجاح ✨"); e.target.reset(); });
+  })();
 
-  $("#newsletter-form").addEventListener("submit", e=>{
-    e.preventDefault(); showToast("Thanks for subscribing!"); e.target.reset();
-  });
-
+  // Reveal on scroll
   const io = new IntersectionObserver((ents)=>{
     ents.forEach(e=> e.isIntersecting && e.target.classList.add("in"));
   }, {threshold: .12});
   const withReveal = el => { el.classList.add("reveal"); io.observe(el); return el; };
 
-  /* CART */
+  // ====== CART ======
   const keyOf = it => `${it.id}-${it.size||'NA'}-${it.color||'NA'}`;
   const getCartQty = () => state.cart.reduce((a,i)=>a + Number(i.qty||0), 0);
-  const updateCartCount = () => cartCount.textContent = getCartQty();
+  function updateCartCount(){ cartCount.textContent = getCartQty(); }
   updateCartCount();
 
   function addToCart(item){
@@ -48,20 +53,22 @@
     const ex = state.cart.find(i=> keyOf(i)===k);
     if(ex){ ex.qty += item.qty || 1; }
     else state.cart.push({ ...item, qty: item.qty || 1 });
-    save("cart", state.cart); updateCartCount(); showToast("Added to cart");
+    save("cart", state.cart); updateCartCount(); showToast("أُضيفت للسلة");
   }
   function removeFromCart(i){ state.cart.splice(i,1); save("cart", state.cart); updateCartCount(); render(); }
   function changeQty(i, qty){ state.cart[i].qty = Math.max(1, qty|0); save("cart", state.cart); updateCartCount(); render(); }
 
-  /* ROUTER */
+  // ====== ROUTER ======
   const routes = {
     "/": viewHome,
     "/shop": viewShop,
     "/product/:id": viewProduct,
     "/cart": viewCart,
-    "/checkout": viewCheckout,             // NEW
+    "/checkout": viewCheckout,
+    "/about": viewAbout,
+    "/delivery-palestine": viewDeliveryPS,
     "/policy/:slug": viewPolicy,
-    "/contact": viewContact                // NEW
+    "/contact": viewContact
   };
 
   function parseHash(){
@@ -76,7 +83,7 @@
       if(p.length !== segments.length) continue;
       let params = {};
       let ok = p.every((seg, i)=>{
-        if(seg.startsWith(":")){ params[seg.slice(1)] = segments[i]; return true; }
+        if(seg.startsWith(":")){ params[seg.slice(1)] = decodeURIComponent(segments[i]); return true; }
         return seg === segments[i];
       });
       if(ok) return { view: routes[pattern], params };
@@ -86,17 +93,18 @@
   window.addEventListener("hashchange", render);
   document.addEventListener("DOMContentLoaded", render);
 
-  /* VIEWS */
+  // ====== VIEWS ======
+
   function viewHome(){
     app.innerHTML = `
       <section class="hero floaters">
         <div>
           <span class="pill">جديدنا • New</span>
           <h1>سترة — أناقتكِ في سترك</h1>
-          <p>عبايات عملية ومناسبة لكل طلة: جامعة، دوام، مناسبة. Delivery in Jordan & Palestine.</p>
+          <p>عبايات عملية ومناسبة لكل طلّة: جامعة، دوام، مناسبة. التوصيل داخل الأردن وفلسطين.</p>
           <div class="cta">
-            <a class="btn btn-primary" href="#/shop">Shop abayas</a>
-            <a class="btn" href="#/contact">WhatsApp us</a>
+            <a class="btn btn-primary" href="#/shop">تسوّقي الآن</a>
+            <a class="btn" href="#/contact">تواصلي عبر واتساب</a>
           </div>
         </div>
         <div aria-hidden="true">
@@ -105,14 +113,14 @@
       </section>
 
       <section class="section">
-        <h2>Trending now</h2>
-        <p class="lead">Handpicked favorites our customers love.</p>
+        <h2>الأكثر طلباً</h2>
+        <p class="lead">اختيارات زبوناتنا المفضّلة.</p>
         <div class="grid" id="home-trending"></div>
       </section>
 
       <section class="section">
-        <h2>New Arrivals</h2>
-        <p class="lead">Fresh styles just landed — limited stock.</p>
+        <h2>وصل حديثاً</h2>
+        <p class="lead">تصاميم جديدة بكمّيات محدودة.</p>
         <div class="grid" id="home-new"></div>
       </section>
     `;
@@ -126,7 +134,7 @@
     const el = document.createElement("article");
     el.className = "card";
     el.innerHTML = `
-      <a href="#/product/${p.id}" class="media" aria-label="${p.title}">
+      <a href="#/product/${encodeURIComponent(p.id)}" class="media" aria-label="${p.title}">
         <img loading="lazy" src="${p.images[0]}" alt="${p.title}" />
       </a>
       <div class="info">
@@ -135,9 +143,9 @@
           <h3 style="margin:.2rem 0;font-size:1.05rem">${p.title}</h3>
           <div class="price">${money(p.price)}</div>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" data-quick="${p.id}">Quick add</button>
-          <a class="btn btn-primary" href="#/product/${p.id}">Details</a>
+        <div style="display:flex;gap:8px; flex-wrap:wrap">
+          <button class="btn" data-quick="${p.id}">إضافة سريعة</button>
+          <a class="btn btn-primary" href="#/product/${encodeURIComponent(p.id)}">التفاصيل</a>
         </div>
       </div>
     `;
@@ -150,18 +158,18 @@
   function viewShop(){
     app.innerHTML = `
       <section class="section">
-        <h2>Shop</h2>
-        <p class="lead">Filter, search, sort — find your fit.</p>
+        <h2>المتجر</h2>
+        <p class="lead">فلترة وبحث وترتيب — اختاري ما يناسبكِ.</p>
         <div class="toolbar">
-          <input id="q" type="search" placeholder="Search products..." value="${state.filters.q}">
+          <input id="q" type="search" placeholder="ابحثي عن منتج..." value="${state.filters.q}">
           <select id="cat">
-            ${["All","Women"].map(c=>`<option ${state.filters.cat===c?"selected":""}>${c}</option>`).join("")}
+            ${["الكل","عبايات","أطقم"].map(c=>`<option ${state.filters.cat===c?"selected":""}>${c}</option>`).join("")}
           </select>
           <select id="sort">
-            <option value="popular" ${state.filters.sort==="popular"?"selected":""}>Sort: Popular</option>
-            <option value="low" ${state.filters.sort==="low"?"selected":""}>Price: Low → High</option>
-            <option value="high" ${state.filters.sort==="high"?"selected":""}>Price: High → Low</option>
-            <option value="new" ${state.filters.sort==="new"?"selected":""}>Newest</option>
+            <option value="popular" ${state.filters.sort==="popular"?"selected":""}>الأشهر</option>
+            <option value="low" ${state.filters.sort==="low"?"selected":""}>السعر: من الأقل</option>
+            <option value="high" ${state.filters.sort==="high"?"selected":""}>السعر: من الأعلى</option>
+            <option value="new" ${state.filters.sort==="new"?"selected":""}>الأحدث</option>
           </select>
         </div>
         <div class="grid" id="shop-grid" style="margin-top:14px"></div>
@@ -172,12 +180,13 @@
     $("#sort").addEventListener("change",(e)=>{ state.filters.sort = e.target.value; renderShopGrid(); });
     renderShopGrid();
   }
+
   function renderShopGrid(){
     const g = $("#shop-grid");
     const { q, cat, sort } = state.filters;
     let items = PRODUCTS.filter(p=>{
-      const okCat = cat==="All" || p.category===cat;
-      const okQ = !q || (p.title.toLowerCase().includes(q.toLowerCase()) || p.description.toLowerCase().includes(q.toLowerCase()));
+      const okCat = cat==="الكل" || p.category===cat;
+      const okQ = !q || (p.title.includes(q) || p.description.includes(q));
       return okCat && okQ;
     });
     if(sort==="low") items.sort((a,b)=> a.price - b.price);
@@ -188,14 +197,14 @@
 
   function viewProduct({ id }){
     const p = PRODUCTS.find(x=> x.id === id);
-    if(!p){ app.innerHTML = `<p>Product not found.</p>`; return; }
+    if(!p){ app.innerHTML = `<section class="section"><p>المنتج غير موجود.</p></section>`; return; }
 
     app.innerHTML = `
       <section class="product section">
         <div class="gallery">
           <div class="main"><img id="main-img" src="${p.images[0]}" alt="${p.title}"></div>
           <div class="thumbs">
-            ${p.images.map((src,i)=>`<img data-src="${src}" alt="View ${i+1} of ${p.title}" ${i===0?'style="outline:2px solid var(--rose)"':''} />`).join("")}
+            ${p.images.map((src,i)=>`<img data-src="${src}" alt="صورة ${i+1} - ${p.title}" ${i===0?'style="outline:2px solid var(--rose)"':''} />`).join("")}
           </div>
         </div>
         <div class="details">
@@ -206,24 +215,24 @@
 
           <div class="options">
             <div>
-              <div class="muted" style="margin-bottom:6px">Color</div>
+              <div class="muted" style="margin-bottom:6px">اللون</div>
               <div class="swatches" id="color-sw">
                 ${p.colors.map((c,i)=>`<button class="swatch" aria-pressed="${i===0?'true':'false'}">${c}</button>`).join("")}
               </div>
             </div>
             <div>
-              <div class="muted" style="margin-bottom:6px">Size</div>
+              <div class="muted" style="margin-bottom:6px">المقاس</div>
               <div class="sizes" id="size-sw">
                 ${p.sizes.map((s,i)=>`<button class="size" aria-pressed="${i===0?'true':'false'}">${s}</button>`).join("")}
               </div>
             </div>
             <div class="qty">
-              <label for="qty" class="muted">Qty</label>
+              <label for="qty" class="muted">الكمية</label>
               <input id="qty" type="number" min="1" value="1" />
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap">
-              <button id="add" class="btn btn-primary">Add to cart</button>
-              <a class="btn" href="#/cart">Go to cart</a>
+              <button id="add" class="btn btn-primary">أضف للسلة</button>
+              <a class="btn" href="#/cart">الذهاب للسلة</a>
             </div>
           </div>
         </div>
@@ -259,7 +268,7 @@
 
   function viewCart(){
     const items = state.cart.map(ci => {
-      const prod = PRODUCTS.find(p=> p.id===ci.id) || { price:0, title:"Unknown", images:[""] };
+      const prod = PRODUCTS.find(p=> p.id===ci.id) || { price:0, title:"غير معروف", images:[""] };
       return { ...ci, prod, line: prod.price * ci.qty };
     });
     const subtotal = items.reduce((a,i)=> a + i.line, 0);
@@ -268,12 +277,12 @@
 
     app.innerHTML = `
       <section class="section">
-        <h2>Your cart</h2>
-        ${!items.length ? `<p class="lead">Cart is empty. <a class="btn" href="#/shop">Go shopping</a></p>` : `
+        <h2>سلتك</h2>
+        ${!items.length ? `<p class="lead">السلة فارغة. <a class="btn" href="#/shop">ابدئي التسوّق</a></p>` : `
           <div style="overflow:auto">
             <table class="table">
               <thead>
-                <tr><th>Item</th><th>Options</th><th>Qty</th><th>Price</th><th></th></tr>
+                <tr><th>المنتج</th><th>الخيارات</th><th>الكمية</th><th>المجموع</th><th></th></tr>
               </thead>
               <tbody>
                 ${items.map((it, i)=>`
@@ -286,9 +295,9 @@
                       </div>
                     </td>
                     <td>${it.color || "-"} / ${it.size || "-"}</td>
-                    <td><input type="number" min="1" value="${it.qty}" data-qty="${i}" style="width:64px"></td>
+                    <td><input type="number" min="1" value="${it.qty}" data-qty="${i}" style="width:76px"></td>
                     <td>${money(it.line)}</td>
-                    <td><button class="btn" data-rm="${i}" aria-label="Remove">Remove</button></td>
+                    <td><button class="btn" data-rm="${i}" aria-label="إزالة">إزالة</button></td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -296,12 +305,12 @@
           </div>
 
           <div style="display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; align-items:flex-start">
-            <div class="pill">Have a question? <a href="https://wa.me/962795178746" target="_blank">WhatsApp us</a></div>
-            <div class="right" style="margin-left:auto; min-width:260px">
-              <div style="display:flex; justify-content:space-between"><span class="muted">Subtotal</span><strong>${money(subtotal)}</strong></div>
-              <div style="display:flex; justify-content:space-between"><span class="muted">Shipping</span><strong>${money(shipping)}</strong></div>
-              <div style="display:flex; justify-content:space-between; font-size:1.2rem; margin-top:6px"><span>Total</span><strong>${money(total)}</strong></div>
-              <a class="btn btn-primary" style="width:100%; margin-top:10px" href="#/checkout">Checkout</a>
+            <div class="pill">عندك سؤال؟ <a href="https://wa.me/${PHONE_E164}" target="_blank">راسِلينا واتساب</a></div>
+            <div class="right" style="margin-inline-start:auto; min-width:260px">
+              <div style="display:flex; justify-content:space-between"><span class="muted">الإجمالي الفرعي</span><strong>${money(subtotal)}</strong></div>
+              <div style="display:flex; justify-content:space-between"><span class="muted">الشحن</span><strong>${money(shipping)}</strong></div>
+              <div style="display:flex; justify-content:space-between; font-size:1.2rem; margin-top:6px"><span>الإجمالي</span><strong>${money(total)}</strong></div>
+              <a class="btn btn-primary" style="width:100%; margin-top:10px" href="#/checkout">إتمام الطلب</a>
             </div>
           </div>
         `}
@@ -311,10 +320,10 @@
     $$("input[data-qty]").forEach(inp=> inp.addEventListener("change", ()=> changeQty(parseInt(inp.dataset.qty,10), parseInt(inp.value||"1",10))));
   }
 
-  /* CHECKOUT with Google Maps embed (no API key needed) */
+  // ====== CHECKOUT (WhatsApp + Google Maps embed) ======
   function viewCheckout(){
     const items = state.cart.map(ci => {
-      const prod = PRODUCTS.find(p=> p.id===ci.id) || { price:0, title:"Unknown", images:[""] };
+      const prod = PRODUCTS.find(p=> p.id===ci.id) || { price:0, title:"غير معروف", images:[""] };
       return { ...ci, prod, line: prod.price * ci.qty };
     });
     if(!items.length){ location.hash = "#/cart"; return; }
@@ -325,33 +334,41 @@
 
     app.innerHTML = `
       <section class="section">
-        <h2>Checkout</h2>
-        <div style="display:grid; gap:16px; grid-template-columns:1fr 0.9fr">
-          <form id="co" class="card" style="padding:14px">
-            <h3>Shipping details</h3>
-            <div class="toolbar" style="margin:8px 0 0 0">
-              <input name="name" placeholder="Full name" required />
-              <input name="phone" placeholder="Phone" value="${PHONE.replace('+','+ ')}" required />
+        <h2>إتمام الطلب</h2>
+        <div class="checkout">
+          <form id="co" class="check-card">
+            <div class="step">١ • بيانات الشحن</div>
+            <div class="form-row" style="margin-top:8px">
+              <input name="name" placeholder="الاسم الكامل" required />
+              <input name="phone" placeholder="الهاتف" value="${PHONE_READ}" required />
             </div>
-            <div class="toolbar" style="margin-top:10px">
-              <input id="addr" name="address" placeholder="Address (city, street, building)" required />
-              <button id="open-maps" class="btn" type="button" title="Open in Google Maps">Open in Maps</button>
-              <button id="myloc" class="btn" type="button" title="Use my GPS location">Use my location</button>
+            <div class="form-row">
+              <input id="addr" name="address" placeholder="العنوان (المدينة، الشارع، المبنى)" required />
             </div>
-            <div class="mapbox" style="margin-top:10px">
+            <div class="form-row">
+              <button id="open-maps" class="btn" type="button" title="فتح في خرائط جوجل">فتح الخريطة</button>
+              <button id="myloc" class="btn" type="button" title="استخدام موقعي">استخدمي موقعي</button>
+            </div>
+            <div class="mapbox">
               <iframe id="gmap" loading="lazy"
                 src="https://www.google.com/maps?q=Amman%20Jordan&output=embed"
                 allowfullscreen></iframe>
             </div>
-            <div class="toolbar" style="margin-top:10px">
-              <input name="note" placeholder="Order note (optional)" />
+
+            <div class="step" style="margin-top:12px">٢ • ملاحظات</div>
+            <div class="form-row">
+              <textarea name="note" rows="3" placeholder="ملاحظة للطلب (اختياري)"></textarea>
             </div>
-            <button class="btn btn-primary" style="margin-top:12px">Place order</button>
-            <small class="muted">Demo checkout — you’ll see a success message.</small>
+
+            <div class="form-row" style="margin-top:10px">
+              <button class="btn btn-primary" type="submit">تأكيد الطلب</button>
+              <a id="wa-btn" class="whats-btn" href="#" target="_blank" rel="noopener">الدفع عبر واتساب</a>
+            </div>
+            <small class="muted">سيتم إرسال تفاصيل طلبك مباشرة إلى واتساب سترة لإتمام التأكيد.</small>
           </form>
 
-          <div class="card" style="padding:14px">
-            <h3>Order summary</h3>
+          <div class="check-card">
+            <div class="step">ملخّص الطلب</div>
             <table class="table" style="margin-top:6px">
               <tbody>
                 ${items.map(it=>`
@@ -363,11 +380,11 @@
                         <small class="muted">${it.color || "-"} / ${it.size || "-"}</small>
                       </div>
                     </td>
-                    <td style="text-align:right">${money(it.line)}</td>
+                    <td style="text-align:end">${money(it.line)}</td>
                   </tr>`).join("")}
-                <tr><td class="muted">Subtotal</td><td style="text-align:right">${money(subtotal)}</td></tr>
-                <tr><td class="muted">Shipping</td><td style="text-align:right">${money(shipping)}</td></tr>
-                <tr><td><strong>Total</strong></td><td style="text-align:right"><strong>${money(total)}</strong></td></tr>
+                <tr><td class="muted">الإجمالي الفرعي</td><td style="text-align:end">${money(subtotal)}</td></tr>
+                <tr><td class="muted">الشحن</td><td style="text-align:end">${money(shipping)}</td></tr>
+                <tr><td><strong>الإجمالي</strong></td><td style="text-align:end"><strong>${money(total)}</strong></td></tr>
               </tbody>
             </table>
           </div>
@@ -377,64 +394,147 @@
 
     const addr = $("#addr");
     const gmap = $("#gmap");
+    const waBtn = $("#wa-btn");
+    let lastCoords = null;
 
     function updateMap(q){
       const url = "https://www.google.com/maps?q=" + encodeURIComponent(q) + "&output=embed";
       gmap.src = url;
     }
+    function buildWhatsAppLink(form){
+      // Compose order text in Arabic
+      const name = form.name.value.trim();
+      const phone = form.phone.value.trim();
+      const address = form.address.value.trim();
+      const note = (form.note.value || "").trim();
+
+      const lines = [];
+      lines.push("طلب جديد من موقع سترة ✨");
+      lines.push(`الاسم: ${name}`);
+      lines.push(`الهاتف: ${phone}`);
+      lines.push(`العنوان: ${address}`);
+      if(lastCoords){ lines.push(`الموقع GPS: ${lastCoords.latitude.toFixed(5)}, ${lastCoords.longitude.toFixed(5)}`); }
+      if(note) lines.push(`ملاحظة: ${note}`);
+      lines.push("");
+      lines.push("المنتجات:");
+      state.cart.forEach(ci=>{
+        const p = PRODUCTS.find(pp=> pp.id===ci.id);
+        if(!p) return;
+        lines.push(`• ${p.title} — لون: ${ci.color || "-"}، مقاس: ${ci.size || "-"} × ${ci.qty}`);
+      });
+      const subtotal = state.cart.reduce((a,ci)=> {
+        const p = PRODUCTS.find(pp=> pp.id===ci.id); return a + (p?p.price:0)*ci.qty;
+      }, 0);
+      const shipping = state.cart.length ? 3.00 : 0;
+      lines.push("");
+      lines.push(`الإجمالي الفرعي: ${money(subtotal)}`);
+      lines.push(`الشحن: ${money(shipping)}`);
+      lines.push(`الإجمالي: ${money(subtotal + shipping)}`);
+
+      const text = encodeURIComponent(lines.join("\n"));
+      return `https://wa.me/${PHONE_E164}?text=${text}`;
+    }
+
     $("#open-maps").addEventListener("click", ()=>{
       const q = addr.value.trim() || "Amman Jordan";
       window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q), "_blank");
     });
+
     addr.addEventListener("change", ()=> updateMap(addr.value));
 
     $("#myloc").addEventListener("click", ()=>{
-      if(!navigator.geolocation){ showToast("Geolocation not supported"); return; }
+      if(!navigator.geolocation){ showToast("المتصفح لا يدعم تحديد الموقع"); return; }
       navigator.geolocation.getCurrentPosition(
         pos=>{
+          lastCoords = pos.coords;
           const { latitude, longitude } = pos.coords;
           updateMap(`${latitude},${longitude}`);
-          addr.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+          if(!addr.value) addr.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
         },
-        ()=> showToast("Couldn’t get your location")
+        ()=> showToast("تعذر الحصول على الموقع")
       );
     });
 
-    $("#co").addEventListener("submit", (e)=>{
+    // WhatsApp button live link
+    const form = $("#co");
+    const setWA = ()=> waBtn.href = buildWhatsAppLink(form);
+    form.addEventListener("input", setWA);
+    setWA();
+
+    form.addEventListener("submit", (e)=>{
       e.preventDefault();
-      showToast("Order placed — شكراً لكِ! We’ll confirm on WhatsApp.");
+      // Open WhatsApp with filled message:
+      window.open(buildWhatsAppLink(form), "_blank");
+      showToast("تم إرسال الطلب إلى واتساب ✅");
+      // Clear cart & go home
       state.cart = []; save("cart", state.cart); updateCartCount();
-      setTimeout(()=> location.hash = "#/", 800);
+      setTimeout(()=> location.hash = "#/", 600);
     });
+  }
+
+  function viewAbout(){
+    app.innerHTML = `
+      <section class="section">
+        <h2>من نحن — سترة</h2>
+        <div class="card" style="padding:16px">
+          <p style="line-height:1.9">
+            ✨ <strong>سترة للعبايات</strong> صفحة خُصّصت لكل بنت وسيدة تعشق الأناقة والاحتشام.
+            فكرتنا بسيطة: نخلي العباية <strong>خيارِكِ الأول</strong> أينما كنتِ — طلعة يومية، دوام، جامعة
+            وحتى مناسبة. في سترة راح تلاقي العباية اللي تعكس شخصيتك وتمنحك حضور واثق وأناقة متجددة.
+          </p>
+          <p style="line-height:1.9">
+            نؤمن أن العباية ليست مجرد لبس؛ هي <strong>هوية وذوق وراحة</strong>. هدفنا أن تكون سترة خيارك الدائم بأناقتك وحضورك. 🌹
+          </p>
+        </div>
+      </section>
+    `;
+  }
+
+  function viewDeliveryPS(){
+    app.innerHTML = `
+      <section class="section">
+        <h2>التوصيل إلى فلسطين 🇵🇸</h2>
+        <div class="card" style="padding:16px">
+          <ul style="line-height:2">
+            <li>التوصيل متاح إلى معظم المدن الرئيسية (رام الله، القدس، نابلس، الخليل...)</li>
+            <li>المدّة المتوقعة: <strong>3–6 أيام عمل</strong> حسب المنطقة.</li>
+            <li>التكلفة: <strong>د.أ 3</strong> ثابتة — مجاناً للطلبات فوق <strong>د.أ 100</strong>.</li>
+            <li>الدفع عند الاستلام أو تأكيد عبر واتساب.</li>
+            <li>تتبّع حالة طلبك عبر رسائل واتساب بعد الشحن.</li>
+          </ul>
+          <a class="whats-btn" href="https://wa.me/${PHONE_E164}?text=${encodeURIComponent('أرغب بالتوصيل إلى فلسطين، ما الخيارات المتاحة؟')}" target="_blank" rel="noopener">اسألي عن منطقتك عبر واتساب</a>
+        </div>
+      </section>
+    `;
   }
 
   function viewPolicy({ slug }){
     const content = {
       shipping: `
-        <h2>Shipping Policy</h2>
-        <p class="lead">Delivery available in Jordan 🇯🇴 and Palestine 🇵🇸.</p>
-        <ul><li>Standard 2–4 business days.</li><li>Free shipping over د.أ 100.</li><li>Tracked delivery for all orders.</li></ul>
+        <h2>سياسة الشحن</h2>
+        <p class="lead">توصيل داخل الأردن 🇯🇴 وفلسطين 🇵🇸.</p>
+        <ul><li>المدّة 2–4 أيام بالأردن، 3–6 أيام بفلسطين.</li><li>شحن مجاني فوق د.أ 100.</li><li>رسائل واتساب للتتبع.</li></ul>
       `,
       returns: `
-        <h2>Return & Refund Policy</h2>
-        <p class="lead">30-day returns in original condition. Free size exchanges.</p>
+        <h2>الإرجاع والاستبدال</h2>
+        <p class="lead">استبدال مقاس خلال 7 أيام بحالته الأصلية. الإرجاع خلال 14 يوماً.</p>
       `,
       privacy: `
-        <h2>Privacy Policy</h2>
-        <p class="lead">We collect only what’s needed to fulfill and support your order. No data sale.</p>
+        <h2>الخصوصية</h2>
+        <p class="lead">نحترم خصوصيتك. لا نبيع بياناتك — نستخدمها فقط لمعالجة طلبك ودعمك.</p>
       `
-    }[slug] || `<h2>Policy</h2><p>Not found.</p>`;
+    }[slug] || `<h2>السياسة</h2><p>غير متوفرة.</p>`;
     app.innerHTML = `<section class="section">${content}</section>`;
   }
 
   function viewContact(){
     app.innerHTML = `
       <section class="section">
-        <h2>Contact</h2>
-        <p class="lead">WhatsApp us for sizing & orders.</p>
-        <div class="card" style="padding:14px">
-          <p><strong>Phone:</strong> <a href="tel:${PHONE}">${PHONE}</a></p>
-          <p><strong>WhatsApp:</strong> <a href="https://wa.me/962795178746" target="_blank" rel="noopener">Message us</a></p>
+        <h2>تواصل</h2>
+        <p class="lead">للاستفسار عن المقاسات والطلبات، راسلينا على واتساب.</p>
+        <div class="card" style="padding:16px">
+          <p><strong>الهاتف:</strong> <a href="tel:+${PHONE_E164}">${PHONE_READ}</a></p>
+          <p><strong>واتساب:</strong> <a class="whats-btn" href="https://wa.me/${PHONE_E164}" target="_blank" rel="noopener">مراسلة واتساب</a></p>
           <div class="mapbox" style="margin-top:10px">
             <iframe loading="lazy" src="https://www.google.com/maps?q=Amman%20Jordan&output=embed" allowfullscreen></iframe>
           </div>
