@@ -176,4 +176,46 @@ a:hover{text-decoration:underline}
 .form-row{ gap:12px; }                      /* wider gap between inputs */
 .notice-strong{ font-weight:800; color:var(--cocoa-dark); 
 }
+/* --- Checkout polish v3 --- */
+
+/* Space between cards/boxes a bit larger */
+.card, .check-card { margin-block: 16px; }
+.checkout { gap: 24px; }
+.form-row { gap: 14px; }
+
+/* Section step header more visible */
+.step { font-weight: 800; color: var(--cocoa-dark); border-style: dashed; }
+
+/* Payment radios – custom, animated */
+.pay-options { display:flex; gap:22px; flex-wrap:wrap; align-items:center; }
+.pay-options input[type="radio"]{
+  appearance:none; width:20px; height:20px; border:2px solid #d6aeb5;
+  border-radius:50%; position:relative; outline:none; cursor:pointer; background:#fff;
+  box-shadow: inset 0 0 0 3px #fff;
+  transition:border-color .15s ease, transform .15s ease;
+}
+.pay-options input[type="radio"]:hover{ transform: scale(1.06); }
+.pay-options input[type="radio"]::after{
+  content:""; position:absolute; inset:3px; border-radius:50%;
+  background: radial-gradient(circle at 30% 30%, var(--rose-2), var(--rose));
+  transform: scale(0); transition: transform .18s ease;
+}
+.pay-options input[type="radio"]:checked{ border-color: var(--cocoa-dark); }
+.pay-options input[type="radio"]:checked::after{ transform: scale(1); }
+.pay-options label{ display:flex; align-items:center; gap:8px; font-weight:800; }
+
+/* Big, bold WhatsApp button (single call to action) */
+.whats-btn.big{
+  font-size:1.05rem; font-weight:900; padding:1rem 1.35rem; border-radius:14px;
+  box-shadow: 0 12px 28px rgba(37,211,102,.25);
+}
+
+/* Neat CliQ box (no QR) */
+.cliq-clean{
+  background:#fff; border:1px solid #e6ccd1; border-radius:16px;
+  padding:14px; box-shadow: var(--shadow);
+}
+.cliq-clean .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+.cliq-clean .amount{ padding:.35rem .7rem; border:1px solid #e6ccd1; border-radius:999px; background:#fff; font-weight:800 }
+
 
