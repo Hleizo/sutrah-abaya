@@ -349,7 +349,8 @@
             <div class="step">١ • بيانات الشحن</div>
             <div class="form-row" style="margin-top:8px">
               <input name="name" placeholder="الاسم الكامل" required />
-              <input name="phone" class="ltr" placeholder="الهاتف" value="${PHONE_READ}" required />
+              <input name="phone" class="ltr" placeholder="الهاتف" required />
+
             </div>
             <div class="form-row">
               <input id="addr" name="address" placeholder="العنوان (المدينة، الشارع، المبنى)" required />
@@ -382,7 +383,8 @@
               <div style="margin-top:8px">
                 <img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('CliQ to '+PHONE_READ+' • Amount '+total)}">
               </div>
-              <small class="muted">بعد التحويل ارفعي لقطة شاشة بالتواصل على واتساب لإتمام التأكيد.</small>
+              <p class="notice-strong" style="margin-top:8px">بعد التحويل ارفعي لقطة شاشة بالتواصل على واتساب لإتمام التأكيد.</p>
+
             </div>
 
             <div class="step" style="margin-top:12px">٣ • ملاحظات</div>
@@ -391,7 +393,6 @@
             <div class="form-row" style="margin-top:10px">
               <button class="btn btn-primary" type="submit">تأكيد الطلب</button>
               <a id="wa-btn" class="whats-btn" href="#" target="_blank" rel="noopener">الدفع عبر واتساب</a>
-              <a id="maps-btn" class="btn" href="#" target="_blank" rel="noopener">فتح مسار التوصيل</a>
             </div>
             <small class="muted">سيُرسل الطلب إلى واتساب مع رابط اتجاهات جوجل مابس للوصول مباشرة.</small>
           </form>
