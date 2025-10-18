@@ -1,6 +1,9 @@
-/* Sutrah Abaya — Arabic SPA (RTL)
-   - صفحات: الرئيسية، المتجر، المنتج، السلة، الدفع، من نحن، التوصيل لفلسطين، السياسات، تواصل
-   - دفع عبر واتساب: يرسل تفاصيل الطلب إلى +962 79 517 8746
+/* Sutrah Abaya — Arabic SPA (RTL) v2
+   Upgrades:
+   - Better cart (steppers + sticky summary)
+   - WhatsApp checkout with Google Maps *directions* link
+   - CliQ "pay to phone" option (same number)
+   - Cleaner Arabic UI
 */
 
 (() => {
@@ -11,38 +14,36 @@
   const toast = $("#toast");
   const cartCount = $("#cart-count");
 
-  const PHONE_E164 = "962795178746";         // بدون +
+  // ==== Settings ====
+  const PHONE_E164 = "962795178746";        // بدون +
   const PHONE_READ = "+962 79 517 8746";
+  const INSTA = "https://www.instagram.com/sutrah_abayajo";
 
   const state = {
     cart: load("cart", []),                   // [{id, size, color, qty}]
-    filters: { q:"", cat:"الكل", sort:"popular" }
+    filters: { q:"", cat:"الكل", sort:"popular" },
+    lastCoords: null
   };
 
   function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
   function load(k, f){ try{ return JSON.parse(localStorage.getItem(k)) ?? f }catch{ return f } }
   function money(n){ return "د.أ " + n.toFixed(2); }
+  function copy(text){ navigator.clipboard?.writeText(text); showToast("تم النسخ ✅"); }
 
   function showToast(msg){
     toast.textContent = msg;
     toast.classList.add("show");
-    setTimeout(()=> toast.classList.remove("show"), 2500);
+    setTimeout(()=> toast.classList.remove("show"), 2200);
   }
 
-  // Footer year + newsletter
-  (function() {
-    const y = $("#year"); if(y) y.textContent = new Date().getFullYear();
-    const nf = $("#newsletter-form");
-    if(nf) nf.addEventListener("submit", e => { e.preventDefault(); showToast("تم الاشتراك بنجاح ✨"); e.target.reset(); });
-  })();
+  // Footer year
+  (function(){ const y=$("#year"); if(y) y.textContent=new Date().getFullYear(); })();
 
   // Reveal on scroll
-  const io = new IntersectionObserver((ents)=>{
-    ents.forEach(e=> e.isIntersecting && e.target.classList.add("in"));
-  }, {threshold: .12});
+  const io = new IntersectionObserver((ents)=> ents.forEach(e=> e.isIntersecting && e.target.classList.add("in")), {threshold:.12});
   const withReveal = el => { el.classList.add("reveal"); io.observe(el); return el; };
 
-  // ====== CART ======
+  // ==== CART ====
   const keyOf = it => `${it.id}-${it.size||'NA'}-${it.color||'NA'}`;
   const getCartQty = () => state.cart.reduce((a,i)=>a + Number(i.qty||0), 0);
   function updateCartCount(){ cartCount.textContent = getCartQty(); }
@@ -56,9 +57,9 @@
     save("cart", state.cart); updateCartCount(); showToast("أُضيفت للسلة");
   }
   function removeFromCart(i){ state.cart.splice(i,1); save("cart", state.cart); updateCartCount(); render(); }
-  function changeQty(i, qty){ state.cart[i].qty = Math.max(1, qty|0); save("cart", state.cart); updateCartCount(); render(); }
+  function setQty(i, qty){ state.cart[i].qty = Math.max(1, qty|0); save("cart", state.cart); updateCartCount(); render(); }
 
-  // ====== ROUTER ======
+  // ==== ROUTER ====
   const routes = {
     "/": viewHome,
     "/shop": viewShop,
@@ -93,7 +94,7 @@
   window.addEventListener("hashchange", render);
   document.addEventListener("DOMContentLoaded", render);
 
-  // ====== VIEWS ======
+  // ==== VIEWS ====
 
   function viewHome(){
     app.innerHTML = `
@@ -104,7 +105,7 @@
           <p>عبايات عملية ومناسبة لكل طلّة: جامعة، دوام، مناسبة. التوصيل داخل الأردن وفلسطين.</p>
           <div class="cta">
             <a class="btn btn-primary" href="#/shop">تسوّقي الآن</a>
-            <a class="btn" href="#/contact">تواصلي عبر واتساب</a>
+            <a class="btn" href="${INSTA}" target="_blank" rel="noopener">إنستغرام</a>
           </div>
         </div>
         <div aria-hidden="true">
@@ -277,50 +278,58 @@
 
     app.innerHTML = `
       <section class="section">
-        <h2>سلتك</h2>
+        <h2>السلة</h2>
         ${!items.length ? `<p class="lead">السلة فارغة. <a class="btn" href="#/shop">ابدئي التسوّق</a></p>` : `
-          <div style="overflow:auto">
-            <table class="table">
-              <thead>
-                <tr><th>المنتج</th><th>الخيارات</th><th>الكمية</th><th>المجموع</th><th></th></tr>
-              </thead>
-              <tbody>
-                ${items.map((it, i)=>`
-                  <tr>
-                    <td style="display:flex; gap:10px; align-items:center">
-                      <img src="${it.prod.images[0]}" alt="">
-                      <div>
-                        <div style="font-weight:700">${it.prod.title}</div>
-                        <small class="muted">${it.id}</small>
-                      </div>
-                    </td>
-                    <td>${it.color || "-"} / ${it.size || "-"}</td>
-                    <td><input type="number" min="1" value="${it.qty}" data-qty="${i}" style="width:76px"></td>
-                    <td>${money(it.line)}</td>
-                    <td><button class="btn" data-rm="${i}" aria-label="إزالة">إزالة</button></td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
+          <div style="display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:start">
+            <div class="card" style="overflow:auto">
+              <table class="table">
+                <thead><tr><th>المنتج</th><th>الخيارات</th><th>الكمية</th><th>المجموع</th><th></th></tr></thead>
+                <tbody>
+                  ${items.map((it, i)=>`
+                    <tr>
+                      <td style="display:flex; gap:10px; align-items:center">
+                        <img src="${it.prod.images[0]}" alt="">
+                        <div><div style="font-weight:700">${it.prod.title}</div><small class="muted">${it.id}</small></div>
+                      </td>
+                      <td>${it.color || "-"} / ${it.size || "-"}</td>
+                      <td>
+                        <span class="qty-step">
+                          <button aria-label="طرح" data-minus="${i}">−</button>
+                          <input type="number" min="1" value="${it.qty}" data-qty="${i}">
+                          <button aria-label="جمع" data-plus="${i}">+</button>
+                        </span>
+                      </td>
+                      <td>${money(it.line)}</td>
+                      <td><button class="btn" data-rm="${i}" aria-label="إزالة">إزالة</button></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
 
-          <div style="display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; align-items:flex-start">
-            <div class="pill">عندك سؤال؟ <a href="https://wa.me/${PHONE_E164}" target="_blank">راسِلينا واتساب</a></div>
-            <div class="right" style="margin-inline-start:auto; min-width:260px">
-              <div style="display:flex; justify-content:space-between"><span class="muted">الإجمالي الفرعي</span><strong>${money(subtotal)}</strong></div>
-              <div style="display:flex; justify-content:space-between"><span class="muted">الشحن</span><strong>${money(shipping)}</strong></div>
-              <div style="display:flex; justify-content:space-between; font-size:1.2rem; margin-top:6px"><span>الإجمالي</span><strong>${money(total)}</strong></div>
-              <a class="btn btn-primary" style="width:100%; margin-top:10px" href="#/checkout">إتمام الطلب</a>
+            <div class="summary">
+              <div class="box">
+                <div style="display:flex; justify-content:space-between"><span class="muted">الإجمالي الفرعي</span><strong>${money(subtotal)}</strong></div>
+                <div style="display:flex; justify-content:space-between"><span class="muted">الشحن</span><strong>${money(shipping)}</strong></div>
+                <div style="display:flex; justify-content:space-between; font-size:1.2rem; margin-top:6px"><span>الإجمالي</span><strong>${money(total)}</strong></div>
+                <a class="btn btn-primary" style="width:100%; margin-top:10px" href="#/checkout">إتمام الطلب</a>
+              </div>
             </div>
           </div>
         `}
       </section>
     `;
     $$("button[data-rm]").forEach(b=> b.addEventListener("click", ()=> removeFromCart(parseInt(b.dataset.rm,10))));
-    $$("input[data-qty]").forEach(inp=> inp.addEventListener("change", ()=> changeQty(parseInt(inp.dataset.qty,10), parseInt(inp.value||"1",10))));
+    $$("input[data-qty]").forEach(inp=> inp.addEventListener("change", ()=> setQty(parseInt(inp.dataset.qty,10), parseInt(inp.value||"1",10))));
+    $$("button[data-minus]").forEach(b=> b.addEventListener("click", ()=> {
+      const i=parseInt(b.dataset.minus,10); setQty(i, state.cart[i].qty - 1);
+    }));
+    $$("button[data-plus]").forEach(b=> b.addEventListener("click", ()=> {
+      const i=parseInt(b.dataset.plus,10); setQty(i, state.cart[i].qty + 1);
+    }));
   }
 
-  // ====== CHECKOUT (WhatsApp + Google Maps embed) ======
+  // ==== CHECKOUT (WhatsApp + CliQ + Google Maps directions) ====
   function viewCheckout(){
     const items = state.cart.map(ci => {
       const prod = PRODUCTS.find(p=> p.id===ci.id) || { price:0, title:"غير معروف", images:[""] };
@@ -340,31 +349,51 @@
             <div class="step">١ • بيانات الشحن</div>
             <div class="form-row" style="margin-top:8px">
               <input name="name" placeholder="الاسم الكامل" required />
-              <input name="phone" placeholder="الهاتف" value="${PHONE_READ}" required />
+              <input name="phone" class="ltr" placeholder="الهاتف" value="${PHONE_READ}" required />
             </div>
             <div class="form-row">
               <input id="addr" name="address" placeholder="العنوان (المدينة، الشارع، المبنى)" required />
             </div>
             <div class="form-row">
-              <button id="open-maps" class="btn" type="button" title="فتح في خرائط جوجل">فتح الخريطة</button>
-              <button id="myloc" class="btn" type="button" title="استخدام موقعي">استخدمي موقعي</button>
+              <button id="open-maps" class="btn" type="button">فتح الخريطة</button>
+              <button id="myloc" class="btn" type="button">استخدمي موقعي</button>
             </div>
             <div class="mapbox">
-              <iframe id="gmap" loading="lazy"
-                src="https://www.google.com/maps?q=Amman%20Jordan&output=embed"
-                allowfullscreen></iframe>
+              <iframe id="gmap" loading="lazy" src="https://www.google.com/maps?q=Amman%20Jordan&output=embed" allowfullscreen></iframe>
             </div>
 
-            <div class="step" style="margin-top:12px">٢ • ملاحظات</div>
+            <div class="step" style="margin-top:12px">٢ • طريقة الدفع</div>
             <div class="form-row">
-              <textarea name="note" rows="3" placeholder="ملاحظة للطلب (اختياري)"></textarea>
+              <label style="display:flex;align-items:center;gap:8px">
+                <input type="radio" name="pay" value="wa" checked> واتساب (تأكيد سريع)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px">
+                <input type="radio" name="pay" value="cliq"> CliQ (تحويل على نفس الرقم)
+              </label>
             </div>
+
+            <div id="cliq-box" class="card" style="display:none; padding:12px; border:1px dashed #e6ccd1">
+              <p class="muted" style="margin:0 0 8px">حوّلي على CliQ لهذا الرقم:</p>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+                <strong class="ltr">${PHONE_READ}</strong>
+                <button type="button" class="btn" id="copy-cliq">نسخ الرقم</button>
+                <span class="pill">المبلغ: <strong>${money(total)}</strong></span>
+              </div>
+              <div style="margin-top:8px">
+                <img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('CliQ to '+PHONE_READ+' • Amount '+total)}">
+              </div>
+              <small class="muted">بعد التحويل ارفعي لقطة شاشة بالتواصل على واتساب لإتمام التأكيد.</small>
+            </div>
+
+            <div class="step" style="margin-top:12px">٣ • ملاحظات</div>
+            <div class="form-row"><textarea name="note" rows="3" placeholder="ملاحظة للطلب (اختياري)"></textarea></div>
 
             <div class="form-row" style="margin-top:10px">
               <button class="btn btn-primary" type="submit">تأكيد الطلب</button>
               <a id="wa-btn" class="whats-btn" href="#" target="_blank" rel="noopener">الدفع عبر واتساب</a>
+              <a id="maps-btn" class="btn" href="#" target="_blank" rel="noopener">فتح مسار التوصيل</a>
             </div>
-            <small class="muted">سيتم إرسال تفاصيل طلبك مباشرة إلى واتساب سترة لإتمام التأكيد.</small>
+            <small class="muted">سيُرسل الطلب إلى واتساب مع رابط اتجاهات جوجل مابس للوصول مباشرة.</small>
           </form>
 
           <div class="check-card">
@@ -375,10 +404,7 @@
                   <tr>
                     <td style="display:flex; gap:10px; align-items:center">
                       <img src="${it.prod.images[0]}" alt="">
-                      <div>
-                        <div style="font-weight:700">${it.prod.title}</div>
-                        <small class="muted">${it.color || "-"} / ${it.size || "-"}</small>
-                      </div>
+                      <div><div style="font-weight:700">${it.prod.title}</div><small class="muted">${it.color || "-"} / ${it.size || "-"}</small></div>
                     </td>
                     <td style="text-align:end">${money(it.line)}</td>
                   </tr>`).join("")}
@@ -395,14 +421,32 @@
     const addr = $("#addr");
     const gmap = $("#gmap");
     const waBtn = $("#wa-btn");
-    let lastCoords = null;
+    const mapsBtn = $("#maps-btn");
+    const paymentRadios = $$("input[name='pay']");
+    const cliqBox = $("#cliq-box");
+    $("#copy-cliq")?.addEventListener("click", ()=> copy(PHONE_READ));
+
+    // Toggle CliQ box
+    paymentRadios.forEach(r =>
+      r.addEventListener("change", ()=> cliqBox.style.display = r.value==="cliq" && r.checked ? "block" : "none")
+    );
+
+    function mapsDirectionsLink(){
+      // Prefer GPS if user granted location
+      if(state.lastCoords){
+        const { latitude, longitude } = state.lastCoords;
+        return `https://www.google.com/maps/dir/?api=1&destination=${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+      }
+      const q = addr.value.trim() || "Amman Jordan";
+      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
+    }
 
     function updateMap(q){
-      const url = "https://www.google.com/maps?q=" + encodeURIComponent(q) + "&output=embed";
-      gmap.src = url;
+      gmap.src = "https://www.google.com/maps?q=" + encodeURIComponent(q || "Amman Jordan") + "&output=embed";
+      mapsBtn.href = mapsDirectionsLink();
     }
+
     function buildWhatsAppLink(form){
-      // Compose order text in Arabic
       const name = form.name.value.trim();
       const phone = form.phone.value.trim();
       const address = form.address.value.trim();
@@ -413,7 +457,10 @@
       lines.push(`الاسم: ${name}`);
       lines.push(`الهاتف: ${phone}`);
       lines.push(`العنوان: ${address}`);
-      if(lastCoords){ lines.push(`الموقع GPS: ${lastCoords.latitude.toFixed(5)}, ${lastCoords.longitude.toFixed(5)}`); }
+      if(state.lastCoords){
+        lines.push(`GPS: ${state.lastCoords.latitude.toFixed(6)}, ${state.lastCoords.longitude.toFixed(6)}`);
+      }
+      lines.push(`رابط مسار التوصيل: ${mapsDirectionsLink()}`);
       if(note) lines.push(`ملاحظة: ${note}`);
       lines.push("");
       lines.push("المنتجات:");
@@ -430,23 +477,25 @@
       lines.push(`الإجمالي الفرعي: ${money(subtotal)}`);
       lines.push(`الشحن: ${money(shipping)}`);
       lines.push(`الإجمالي: ${money(subtotal + shipping)}`);
+      lines.push("");
+      const paySel = $$("input[name='pay']").find(x=>x.checked)?.value;
+      if(paySel==="cliq"){
+        lines.push(`الدفع: CliQ إلى ${PHONE_READ}`);
+      } else {
+        lines.push("الدفع: تأكيد عبر واتساب");
+      }
 
       const text = encodeURIComponent(lines.join("\n"));
       return `https://wa.me/${PHONE_E164}?text=${text}`;
     }
 
-    $("#open-maps").addEventListener("click", ()=>{
-      const q = addr.value.trim() || "Amman Jordan";
-      window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q), "_blank");
-    });
-
+    $("#open-maps").addEventListener("click", ()=> window.open(mapsDirectionsLink(), "_blank"));
     addr.addEventListener("change", ()=> updateMap(addr.value));
-
     $("#myloc").addEventListener("click", ()=>{
       if(!navigator.geolocation){ showToast("المتصفح لا يدعم تحديد الموقع"); return; }
       navigator.geolocation.getCurrentPosition(
         pos=>{
-          lastCoords = pos.coords;
+          state.lastCoords = pos.coords;
           const { latitude, longitude } = pos.coords;
           updateMap(`${latitude},${longitude}`);
           if(!addr.value) addr.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
@@ -455,15 +504,15 @@
       );
     });
 
-    // WhatsApp button live link
+    // Live links
     const form = $("#co");
-    const setWA = ()=> waBtn.href = buildWhatsAppLink(form);
-    form.addEventListener("input", setWA);
-    setWA();
+    const setLinks = ()=> { waBtn.href = buildWhatsAppLink(form); mapsBtn.href = mapsDirectionsLink(); };
+    form.addEventListener("input", setLinks);
+    setLinks();
 
     form.addEventListener("submit", (e)=>{
       e.preventDefault();
-      // Open WhatsApp with filled message:
+      // open WhatsApp with full message (includes maps directions)
       window.open(buildWhatsAppLink(form), "_blank");
       showToast("تم إرسال الطلب إلى واتساب ✅");
       // Clear cart & go home
@@ -479,8 +528,7 @@
         <div class="card" style="padding:16px">
           <p style="line-height:1.9">
             ✨ <strong>سترة للعبايات</strong> صفحة خُصّصت لكل بنت وسيدة تعشق الأناقة والاحتشام.
-            فكرتنا بسيطة: نخلي العباية <strong>خيارِكِ الأول</strong> أينما كنتِ — طلعة يومية، دوام، جامعة
-            وحتى مناسبة. في سترة راح تلاقي العباية اللي تعكس شخصيتك وتمنحك حضور واثق وأناقة متجددة.
+            نخلي العباية <strong>خيارِكِ الأول</strong> أينما كنتِ — طلعة يومية، دوام، جامعة وحتى مناسبة.
           </p>
           <p style="line-height:1.9">
             نؤمن أن العباية ليست مجرد لبس؛ هي <strong>هوية وذوق وراحة</strong>. هدفنا أن تكون سترة خيارك الدائم بأناقتك وحضورك. 🌹
@@ -498,11 +546,10 @@
           <ul style="line-height:2">
             <li>التوصيل متاح إلى معظم المدن الرئيسية (رام الله، القدس، نابلس، الخليل...)</li>
             <li>المدّة المتوقعة: <strong>3–6 أيام عمل</strong> حسب المنطقة.</li>
-            <li>التكلفة: <strong>د.أ 3</strong> ثابتة — مجاناً للطلبات فوق <strong>د.أ 100</strong>.</li>
-            <li>الدفع عند الاستلام أو تأكيد عبر واتساب.</li>
-            <li>تتبّع حالة طلبك عبر رسائل واتساب بعد الشحن.</li>
+            <li>التكلفة: <strong>د.أ 3</strong> — مجاناً للطلبات فوق <strong>د.أ 100</strong>.</li>
+            <li>الدفع: عند الاستلام، واتساب، أو CliQ على نفس الرقم.</li>
           </ul>
-          <a class="whats-btn" href="https://wa.me/${PHONE_E164}?text=${encodeURIComponent('أرغب بالتوصيل إلى فلسطين، ما الخيارات المتاحة؟')}" target="_blank" rel="noopener">اسألي عن منطقتك عبر واتساب</a>
+          <a class="whats-btn" href="https://wa.me/${PHONE_E164}?text=${encodeURIComponent('أرغب بالتوصيل إلى فلسطين، ما الخيارات المتاحة؟')}" target="_blank" rel="noopener">اسألي عبر واتساب</a>
         </div>
       </section>
     `;
@@ -513,7 +560,7 @@
       shipping: `
         <h2>سياسة الشحن</h2>
         <p class="lead">توصيل داخل الأردن 🇯🇴 وفلسطين 🇵🇸.</p>
-        <ul><li>المدّة 2–4 أيام بالأردن، 3–6 أيام بفلسطين.</li><li>شحن مجاني فوق د.أ 100.</li><li>رسائل واتساب للتتبع.</li></ul>
+        <ul><li>المدّة 2–4 أيام بالأردن، 3–6 أيام بفلسطين.</li><li>شحن مجاني فوق د.أ 100.</li><li>رابط اتجاهات في كل طلب.</li></ul>
       `,
       returns: `
         <h2>الإرجاع والاستبدال</h2>
@@ -531,10 +578,11 @@
     app.innerHTML = `
       <section class="section">
         <h2>تواصل</h2>
-        <p class="lead">للاستفسار عن المقاسات والطلبات، راسلينا على واتساب.</p>
+        <p class="lead">للاستفسار عن المقاسات والطلبات.</p>
         <div class="card" style="padding:16px">
-          <p><strong>الهاتف:</strong> <a href="tel:+${PHONE_E164}">${PHONE_READ}</a></p>
+          <p><strong>الهاتف:</strong> <a class="ltr" href="tel:+${PHONE_E164}">${PHONE_READ}</a></p>
           <p><strong>واتساب:</strong> <a class="whats-btn" href="https://wa.me/${PHONE_E164}" target="_blank" rel="noopener">مراسلة واتساب</a></p>
+          <p><strong>إنستغرام:</strong> <a class="ltr" href="${INSTA}" target="_blank" rel="noopener">@sutrah_abayajo</a></p>
           <div class="mapbox" style="margin-top:10px">
             <iframe loading="lazy" src="https://www.google.com/maps?q=Amman%20Jordan&output=embed" allowfullscreen></iframe>
           </div>
