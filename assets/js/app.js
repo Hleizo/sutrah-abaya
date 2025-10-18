@@ -422,7 +422,6 @@
     const addr = $("#addr");
     const gmap = $("#gmap");
     const waBtn = $("#wa-btn");
-    const mapsBtn = $("#maps-btn");
     const paymentRadios = $$("input[name='pay']");
     const cliqBox = $("#cliq-box");
     $("#copy-cliq")?.addEventListener("click", ()=> copy(PHONE_READ));
