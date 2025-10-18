@@ -217,5 +217,25 @@ a:hover{text-decoration:underline}
 }
 .cliq-clean .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
 .cliq-clean .amount{ padding:.35rem .7rem; border:1px solid #e6ccd1; border-radius:999px; background:#fff; font-weight:800 }
+/* --- vertical spacing fix for checkout inputs --- */
+.form-row + .form-row {            /* space between stacked rows */
+  margin-top: 12px;
+}
 
+/* keep space before the embedded map too */
+.form-row + .mapbox,
+.mapbox + .step {                  /* space after map before next step */
+  margin-top: 12px;
+}
+
+/* comfy input height so text doesn't look cramped */
+.form-row input,
+.form-row select,
+.form-row textarea {
+  min-height: 46px;
+  line-height: 1.4;
+}
+
+/* note under WhatsApp button shouldn’t touch the button */
+.under-cta-note { margin-top: 12px !important; display: block; }
 
