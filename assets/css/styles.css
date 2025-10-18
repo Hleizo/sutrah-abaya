@@ -170,3 +170,10 @@ a:hover{text-decoration:underline}
   .gallery{grid-template-columns:1fr}
   .checkout{grid-template-columns:1fr}
 }
+/* --- minor spacing & emphasis tweaks --- */
+.card, .check-card{ margin-block:10px; }   /* little space between boxes */
+.checkout{ gap:20px; }                      /* wider gap between columns */
+.form-row{ gap:12px; }                      /* wider gap between inputs */
+.notice-strong{ font-weight:800; color:var(--cocoa-dark); 
+}
+
