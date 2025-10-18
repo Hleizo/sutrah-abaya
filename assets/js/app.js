@@ -364,14 +364,17 @@
             </div>
 
             <div class="step" style="margin-top:12px">٢ • طريقة الدفع</div>
-            <div class="form-row">
-              <label style="display:flex;align-items:center;gap:8px">
-                <input type="radio" name="pay" value="wa" checked> واتساب (تأكيد سريع)
-              </label>
-              <label style="display:flex;align-items:center;gap:8px">
-                <input type="radio" name="pay" value="cliq"> CliQ (تحويل على نفس الرقم)
-              </label>
-            </div>
+           <div class="pay-options form-row" aria-label="طريقة الدفع">
+  <label>
+    <input type="radio" name="pay" value="wa" checked>
+    واتساب — <span class="muted">الدفع عند الاستلام (تأكيد سريع)</span>
+  </label>
+  <label>
+    <input type="radio" name="pay" value="cliq">
+    CliQ — <span class="muted">تحويل على نفس الرقم</span>
+  </label>
+</div>
+
 
             <div id="cliq-box" class="card" style="display:none; padding:12px; border:1px dashed #e6ccd1">
               <p class="muted" style="margin:0 0 8px">حوّلي على CliQ لهذا الرقم:</p>
