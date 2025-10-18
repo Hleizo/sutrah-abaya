@@ -376,13 +376,18 @@
 </div>
 
 
-            <div id="cliq-box" class="card" style="display:none; padding:12px; border:1px dashed #e6ccd1">
-              <p class="muted" style="margin:0 0 8px">حوّلي على CliQ لهذا الرقم:</p>
-              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-                <strong class="ltr">${PHONE_READ}</strong>
-                <button type="button" class="btn" id="copy-cliq">نسخ الرقم</button>
-                <span class="pill">المبلغ: <strong>${money(total)}</strong></span>
-              </div>
+            <div id="cliq-box" class="cliq-clean" style="display:none">
+  <p class="notice-strong" style="margin:0 0 8px">حوّلي عبر CliQ على هذا الرقم:</p>
+  <div class="row">
+    <strong class="ltr">${PHONE_READ}</strong>
+    <button type="button" class="btn" id="copy-cliq">نسخ الرقم</button>
+    <span class="amount">المبلغ: ${money(total)}</span>
+  </div>
+  <p class="muted" style="margin:.6rem 0 0">
+    بعد التحويل، أرسلي لقطة الشاشة على واتساب لإتمام التأكيد وسيتم تجهيز الطلب مباشرة.
+  </p>
+</div>
+
               <div style="margin-top:8px">
                 <img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('CliQ to '+PHONE_READ+' • Amount '+total)}">
               </div>
