@@ -399,10 +399,12 @@
             <div class="form-row"><textarea name="note" rows="3" placeholder="ملاحظة للطلب (اختياري)"></textarea></div>
 
             <div class="form-row" style="margin-top:10px">
-              <button class="btn btn-primary" type="submit">تأكيد الطلب</button>
-              <a id="wa-btn" class="whats-btn" href="#" target="_blank" rel="noopener">الدفع عبر واتساب</a>
-            </div>
-            <small class="muted">سيُرسل الطلب إلى واتساب مع رابط اتجاهات جوجل مابس للوصول مباشرة.</small>
+  <a id="wa-btn" class="whats-btn big" href="#" target="_blank" rel="noopener">إرسال الطلب عبر واتساب</a>
+</div>
+<p class="muted" style="margin-top:-6px">
+  سيُرسل الطلب إلى واتساب مع رابط اتجاهات جوجل مابس للوصول مباشرة.
+</p>
+
           </form>
 
           <div class="check-card">
@@ -487,11 +489,12 @@
       lines.push(`الإجمالي: ${money(subtotal + shipping)}`);
       lines.push("");
       const paySel = $$("input[name='pay']").find(x=>x.checked)?.value;
-      if(paySel==="cliq"){
-        lines.push(`الدفع: CliQ إلى ${PHONE_READ}`);
-      } else {
-        lines.push("الدفع: تأكيد عبر واتساب");
-      }
+if(paySel==="cliq"){
+  lines.push(`طريقة الدفع: CliQ إلى ${PHONE_READ}`);
+} else {
+  lines.push("طريقة الدفع: عند الاستلام (ترتيب عبر واتساب)");
+}
+
 
       const text = encodeURIComponent(lines.join("\n"));
       return `https://wa.me/${PHONE_E164}?text=${text}`;
