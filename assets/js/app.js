@@ -388,12 +388,7 @@
   </p>
 </div>
 
-              <div style="margin-top:8px">
-                <img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('CliQ to '+PHONE_READ+' • Amount '+total)}">
-              </div>
-              <p class="notice-strong" style="margin-top:8px">بعد التحويل ارفعي لقطة شاشة بالتواصل على واتساب لإتمام التأكيد.</p>
-
-            </div>
+            
 
             <div class="step" style="margin-top:12px">٣ • ملاحظات</div>
             <div class="form-row"><textarea name="note" rows="3" placeholder="ملاحظة للطلب (اختياري)"></textarea></div>
