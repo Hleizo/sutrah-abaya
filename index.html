@@ -5,43 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#F6D3D8" />
   <title>سترة عبايات — Sutrah Abaya</title>
-  <meta name="description" content="سترة عبايات إماراتية فاخرة — أناقتكِ في سترك. توصيل داخل الأردن وفلسطين." />
+  <meta name="description" content="سترة عبايات إماراتية فاخرة — أناقتكِ في سترك. التوصيل داخل الأردن وفلسطين." />
+
+  <!-- Fonts + CSS -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="icon" href="data:,">
+
+  <!-- Favicon / logo (will show if you later upload assets/logo.png) -->
+  <link rel="icon" href="assets/logo.png">
 </head>
 
 <body>
-  <!-- رابط تخطي للمحتوى -->
   <a class="skip-link" href="#app">تخطي إلى المحتوى</a>
 
-  <!-- رأس الموقع / التنقّل -->
+  <!-- Header -->
   <header class="site-header">
     <div class="container nav">
-      <a class="logo" href="#/">سترة • SUTRAH</a>
+      <a class="logo" href="#/">
+        <!-- If logo.png exists it will show; otherwise text appears -->
+        <img src="assets/logo.png" alt="SUTRAH" onerror="this.replaceWith(document.createTextNode('سترة • SUTRAH'))">
+      </a>
       <nav aria-label="التنقّل الرئيسي">
         <a href="#/" data-link>الرئيسية</a>
         <a href="#/shop" data-link>المتجر</a>
         <a href="#/about" data-link>من نحن</a>
         <a href="#/delivery-palestine" data-link>التوصيل إلى فلسطين</a>
         <a href="#/contact" data-link>تواصل</a>
-        <a href="#/cart" data-link class="cart-link">
-          السلة <span id="cart-count" class="badge">0</span>
-        </a>
+        <a href="#/cart" data-link class="cart-link">السلة <span id="cart-count" class="badge">0</span></a>
       </nav>
     </div>
   </header>
 
-  <!-- الجذر -->
   <main id="app" class="app container" tabindex="-1" aria-live="polite"></main>
 
-  <!-- تذييل -->
+  <!-- Footer (removed newsletter; fixed phone direction; added Instagram) -->
   <footer class="site-footer">
     <div class="container footer-grid">
       <div>
         <h4>عن سترة</h4>
-        <p>عبايات إماراتية فاخرة — أناقتكِ في سترك. التوصيل متاح داخل الأردن 🇯🇴 وفلسطين 🇵🇸.</p>
+        <p>عبايات إماراتية فاخرة — أناقتكِ في سترك. التوصيل داخل الأردن 🇯🇴 وفلسطين 🇵🇸.</p>
       </div>
       <div>
         <h4>مساعدة</h4>
@@ -53,21 +56,19 @@
       </div>
       <div>
         <h4>تواصل</h4>
-        <p><strong>واتساب / هاتف:</strong> <a href="https://wa.me/962795178746" target="_blank" rel="noopener">+962 79 517 8746</a></p>
-        <form id="newsletter-form" class="newsletter" autocomplete="on">
-          <label class="sr-only" for="newsletter-email">البريد الإلكتروني</label>
-          <input id="newsletter-email" name="email" type="email" placeholder="you@example.com" required />
-          <button type="submit">انضمّي</button>
-        </form>
+        <p><strong>واتساب / هاتف:</strong>
+          <a class="ltr" href="https://wa.me/962795178746" target="_blank" rel="noopener">+962 79 517 8746</a>
+        </p>
+        <p><strong>إنستغرام:</strong>
+          <a class="ltr" href="https://www.instagram.com/sutrah_abayajo" target="_blank" rel="noopener">@sutrah_abayajo</a>
+        </p>
         <small>© <span id="year"></span> Sutrah Abaya. جميع الحقوق محفوظة.</small>
       </div>
     </div>
   </footer>
 
-  <!-- إشعار -->
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- الأكواد -->
   <script src="assets/js/products.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
