@@ -252,11 +252,14 @@ a:hover{text-decoration:underline}
 }
 
 /* comfy input height so text doesn't look cramped */
-.form-row input,
+/* apply tall height to text inputs only (NOT radios/checkboxes) */
+.form-row input:not([type="radio"]):not([type="checkbox"]),
 .form-row select,
 .form-row textarea {
   min-height: 46px;
   line-height: 1.4;
+}
+
 }
 
 /* note under WhatsApp button shouldn’t touch the button */
