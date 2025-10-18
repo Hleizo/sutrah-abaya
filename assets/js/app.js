@@ -506,7 +506,7 @@
 
     // Live links
     const form = $("#co");
-    const setLinks = ()=> { waBtn.href = buildWhatsAppLink(form); mapsBtn.href = mapsDirectionsLink(); };
+    const setLinks = ()=> { waBtn.href = buildWhatsAppLink(form); };
     form.addEventListener("input", setLinks);
     setLinks();
 
