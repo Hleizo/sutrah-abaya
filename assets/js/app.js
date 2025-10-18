@@ -396,9 +396,10 @@
             <div class="form-row" style="margin-top:10px">
   <a id="wa-btn" class="whats-btn big" href="#" target="_blank" rel="noopener">إرسال الطلب عبر واتساب</a>
 </div>
-<p class="muted" style="margin-top:-6px">
+<p class="muted under-cta-note">
   سيُرسل الطلب إلى واتساب مع رابط اتجاهات جوجل مابس للوصول مباشرة.
 </p>
+
 
           </form>
 
