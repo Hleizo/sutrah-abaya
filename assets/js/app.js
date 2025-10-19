@@ -607,3 +607,46 @@ if(paySel==="cliq"){
     }));
   }
 })();
+// == Smart Topbar controller ==
+(function(){
+  const bar = document.getElementById('topbar');
+  if(!bar) return;
+
+  let lastY = window.scrollY;
+  let ticking = false;
+  let revealLock = false;        // prevents flicker when revealing
+  const COMPACT_AT = 80;         // px to start shadow/compact
+  const HIDE_DELTA = 8;          // min movement to trigger
+
+  function onScroll(){
+    const y = window.scrollY;
+    const dy = y - lastY;
+
+    // compact + shadow
+    if(y > COMPACT_AT) bar.classList.add('is-scrolled','is-compact');
+    else bar.classList.remove('is-scrolled','is-compact');
+
+    // down = hide, up = show
+    if(Math.abs(dy) > HIDE_DELTA && !revealLock){
+      if(dy > 0 && y > COMPACT_AT) bar.classList.add('is-hidden');
+      else bar.classList.remove('is-hidden');
+    }
+
+    lastY = y;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if(!ticking){ requestAnimationFrame(onScroll); ticking = true; }
+  }, { passive:true });
+
+  // Desktop nicety: reveal if mouse touches top edge
+  window.addEventListener('mousemove', (e)=>{
+    if(e.clientY < 60){
+      bar.classList.remove('is-hidden');
+      revealLock = true; setTimeout(()=> revealLock=false, 250);
+    }
+  });
+
+  onScroll(); // initialize state
+})();
