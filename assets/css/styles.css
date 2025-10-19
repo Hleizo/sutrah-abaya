@@ -308,4 +308,46 @@ a:hover{text-decoration:underline}
 
 /* note under WhatsApp button shouldn’t touch the button */
 .under-cta-note { margin-top: 12px !important; display: block; }
+/* == Smart Topbar (show on scroll up / hide on scroll down) == */
+.topbar{
+  position: sticky;
+  top: 0; inset-inline: 0;
+  z-index: 50;
+  background: linear-gradient(180deg,
+              color-mix(in srgb, var(--rose-1) 70%, #fff),
+              rgba(255,255,255,0.88));
+  backdrop-filter: saturate(120%) blur(8px);
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  transition: transform .35s ease, box-shadow .25s ease, background .35s ease;
+  will-change: transform;
+}
+.topbar.is-scrolled{ box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+.topbar.is-hidden{ transform: translateY(-110%); }
+.topbar.is-compact .brand-badge{ transform: scale(.92); }
+.brand-badge{ transition: transform .25s ease; }
+
+/* Gentle animated gradient on the brand pill */
+.brand-badge{
+  background: linear-gradient(90deg, var(--rose-2), var(--rose-1), var(--rose-2));
+  background-size: 200% 100%;
+  animation: badgeShift 6s ease-in-out infinite;
+  display:inline-block;
+  padding-inline:.9rem; padding-block:.5rem;
+  border-radius:999px;
+}
+@keyframes badgeShift{
+  0%{ background-position: 0% 50%; }
+  50%{ background-position: 100% 50%; }
+  100%{ background-position: 0% 50%; }
+}
+
+/* Nav link underline slide */
+.nav a{ position:relative; transition: color .2s ease; }
+.nav a::after{
+  content:""; position:absolute; inset-inline:0; inset-block-end:-8px; height:2px;
+  background: color-mix(in srgb, var(--rose) 55%, #0000);
+  transform: scaleX(0); transform-origin:center;
+  transition: transform .22s ease; border-radius:2px;
+}
+.nav a:hover::after{ transform: scaleX(1); }
 
