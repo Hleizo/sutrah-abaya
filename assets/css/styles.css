@@ -6,11 +6,55 @@
 */
 
 :root{
-  --paper:#FFFBFC; --bg:#F9F1F3; --panel:#FFFFFF; --ink:#1A1A1A; --muted:#6b6b6b;
-  --rose:#F6D3D8; --rose-2:#E7BBC1; --cocoa:#6B3A35; --cocoa-dark:#512A26;
-  --ok:#22c55e; --danger:#ef4444; --shadow:0 10px 30px rgba(107,58,53,.15);
-  --radius:18px; --gap:14px;
+  /* Sutrah Blush v2 */
+  --rose-0:#FFF9FA;
+  --rose-1:#FDEFF2;
+  --rose-2:#F8DDE3;
+  --rose-3:#F3C5CE;
+  --rose:#E8A8B6;
+
+  --cocoa:#7A4A49;
+  --cocoa-dark:#533131;
+  --cocoa-70: rgba(83,49,49,.70);
+
+  --whatsapp:#25D366;
+
+  /* existing spacing/shadows may stay as is */
+  --radius:16px;
+  --shadow: 0 8px 24px rgba(124, 60, 60, .06);
 }
+/* page background: barely-there blush gradient */
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%, var(--rose-1), transparent 60%),
+    linear-gradient(180deg, var(--rose-0), #fff 40%);
+}
+
+/* section/header soft wash */
+.header, .hero, .strip{
+  background: linear-gradient(180deg, var(--rose-1), transparent);
+}
+
+/* cards cleaner */
+.card, .check-card{
+  background:#fff;
+  border:1px solid color-mix(in srgb, var(--rose-2) 35%, #ffffff);
+  box-shadow: var(--shadow);
+}
+
+/* buttons better contrast */
+.btn, .whats-btn{
+  border-radius:14px;
+}
+.whats-btn{
+  background: var(--whatsapp);
+}
+.btn-primary{
+  background: var(--rose);
+  color:#fff;
+}
+.btn:hover{ filter: brightness(0.97); }
+
 
 *{box-sizing:border-box}
 html,body{height:100%}
