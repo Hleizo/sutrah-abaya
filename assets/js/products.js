@@ -24,8 +24,7 @@ window.PRODUCTS = [
   colors: ["أسود"],
   sizes: ["S","M","L","XL"],
   images: [
-    "assets/products/abaya-black-rose-1.jpg",
-    "assets/products/abaya-black-rose-2.jpg"
+    "assets/products/abaya-with-flowers.png",
   ],
   description: "عباية سوداء بتطريز ورود ناعم وخياطة نظيفة. مناسبة للجامعة والدوام والمناسبات."
 },
