@@ -10,7 +10,7 @@ window.PRODUCTS = [
     colors: ["أسود"],
     sizes: ["S","M","L","XL"],
     images: [
-assets/products/abaya-with-flowers.png
+    assets/js/abaya-with-flowers.png
     ],
     description: "قماش خفيف بملمس حريري وانسيابية مريحة؛ خيار يومي أنيق."
   },
