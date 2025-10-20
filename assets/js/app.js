@@ -125,9 +125,7 @@
         <div class="grid" id="home-new"></div>
       </section>
     `;
-    const t = $("#home-trending"), n = $("#home-new");
-    PRODUCTS.slice(0,3).forEach(p=> t.append(productCard(p)));
-    PRODUCTS.slice().reverse().forEach(p=> n.append(productCard(p)));
+   
     $$(".section").forEach(withReveal);
   }
 
@@ -448,9 +446,9 @@
     }
 
     function updateMap(q){
-      gmap.src = "https://www.google.com/maps?q=" + encodeURIComponent(q || "Amman Jordan") + "&output=embed";
-      mapsBtn.href = mapsDirectionsLink();
-    }
+  gmap.src = "https://www.google.com/maps?q=" + encodeURIComponent(q || "Amman Jordan") + "&output=embed";
+}
+
 
     function buildWhatsAppLink(form){
       const name = form.name.value.trim();
@@ -647,5 +645,47 @@ if(paySel==="cliq"){
       revealLock = true; setTimeout(()=> revealLock=false, 250);
     }
   });
+     onScroll();              // initialize state once
+})();
+/* ===== Home sections by tags: "popular" & "new" (safe add-on) ===== */
+(function () {
+  if (window.__homeByTagsInit) return;
+  window.__homeByTagsInit = true;
+
+  function sortByRank(arr, key) {
+    return (arr || []).slice().sort((a,b) => ((a?.[key] ?? 999) - (b?.[key] ?? 999)));
+  }
+  function pickByTag(tag, rankKey, limit=8){
+    const list = (window.PRODUCTS || []).filter(p => (p.tags || []).includes(tag));
+    return sortByRank(list, rankKey).slice(0, limit);
+  }
+
+  // use your existing productCard() to keep styling
+  function renderGridHome(containerId, list){
+    const el = document.getElementById(containerId);
+    if(!el) return;
+    el.innerHTML = "";
+    list.forEach(p => el.appendChild(productCard(p)));
+  }
+
+  function fillHome(){
+    const popular = pickByTag('popular', 'rankPopular', 8);
+    const newest  = pickByTag('new',     'rankNew',     8);
+    renderGridHome('home-trending', popular);
+    renderGridHome('home-new',      newest);
+  }
+
+  // Fill on first load (when home is visible) and on navigation
+  function tryFill(){
+    if (document.getElementById('home-trending') || document.getElementById('home-new')) {
+      fillHome();
+    }
+  }
+  if (document.readyState !== 'loading') tryFill();
+  else document.addEventListener('DOMContentLoaded', tryFill);
+  window.addEventListener('hashchange', tryFill);
+})();
+
+
 
  
