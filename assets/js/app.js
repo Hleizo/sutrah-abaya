@@ -650,3 +650,40 @@ if(paySel==="cliq"){
 
   onScroll(); // initialize state
 })();
+/* ==========================
+   HOME SECTIONS RENDERING
+   Drop-in block — safe to paste at the END of assets/js/app.js
+   ========================== */
+
+(function () {
+  // Create a renderer only if your app.js doesn't already define one
+  if (typeof window.renderGrid !== "function") {
+    window.renderGrid = function renderGrid(containerId, list) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+
+      el.innerHTML = "";
+      list.forEach(p => el.appendChild(productCard(p)));
+    };
+
+    function productCard(p) {
+      const a = document.createElement("a");
+      a.className = "card";
+      a.href = `#/product/${p.id}`;
+      a.innerHTML = `
+        <div class="card-media">
+          <img src="${(p.images && p.images[0]) || ""}" alt="${p.title || ""}" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="eyebrow">${p.category || ""}</div>
+          <h3 class="title">${p.title || ""}</h3>
+          <div class="price">${Number(p.price || 0).toFixed(2)} د.أ</div>
+          <button class="btn btn-primary">التفاصيل</button>
+        </div>
+      `;
+      return a;
+    }
+  }
+
+  // Helper sort by optional rank field
+  const sortByRank = (arr, key
