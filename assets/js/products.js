@@ -3,7 +3,7 @@ window.PRODUCTS = [
   {
     id: "ab01",
     title: "عباية مطرزة ورود — أسود",
-    price: 89.00,
+    price: 22.00,
     category: "عبايات",
     colors: ["أسود"],
     sizes: ["S", "M", "L", "XL"],
@@ -13,7 +13,7 @@ window.PRODUCTS = [
   {
     id: "ab02",
     title: "عباية سادة — موكا",
-    price: 79.00,
+    price: 18.00,
     category: "عبايات",
     colors: ["موكا"],
     sizes: ["S", "M", "L", "XL"],
