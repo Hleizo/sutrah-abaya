@@ -5,7 +5,7 @@ window.PRODUCTS = [
   {
     id: "ab01",
     title: "عباية سيلك فلو — أسود",
-    price: 69.00,
+    price: 20.00,
     category: "عبايات",
     colors: ["أسود"],
     sizes: ["S","M","L","XL"],
@@ -16,6 +16,19 @@ window.PRODUCTS = [
     ],
     description: "قماش خفيف بملمس حريري وانسيابية مريحة؛ خيار يومي أنيق."
   },
+   {
+  id: "abaya-black-rose",                // must be unique
+  title: "عباية مطرزة ورود — أسود",
+  category: "عبايات",
+  price: 21.00,
+  colors: ["أسود"],
+  sizes: ["S","M","L","XL"],
+  images: [
+    "assets/products/abaya-black-rose-1.jpg",
+    "assets/products/abaya-black-rose-2.jpg"
+  ],
+  description: "عباية سوداء بتطريز ورود ناعم وخياطة نظيفة. مناسبة للجامعة والدوام والمناسبات."
+},
   {
     id: "ab02",
     title: "عباية ستان إيدج — موكا",
