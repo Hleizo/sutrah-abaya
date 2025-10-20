@@ -17,7 +17,7 @@ window.PRODUCTS = [
     category: "عبايات",
     colors: ["موكا"],
     sizes: ["S", "M", "L", "XL"],
-    images: ["assets/products/abaya-with-flowers.png"], // مؤقتًا نفس الصورة
+    images: ["assets/products/abaya-2.png"], // مؤقتًا نفس الصورة
     description: "قماش ناعم وانسيابي للاستخدام اليومي المريح."
   }
 ];
