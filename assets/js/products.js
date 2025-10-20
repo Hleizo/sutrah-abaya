@@ -1,23 +1,30 @@
-/* بيانات المنتجات — سترة */
 window.PRODUCTS = [
   {
     id: "ab01",
     title: "عباية مطرزة ورود — أسود",
-    price: 22.00,
+    price: 89.00,
     category: "عبايات",
     colors: ["أسود"],
-    sizes: ["S", "M", "L", "XL"],
-    images: ["abaya-2.png"],
-    description: "عباية سوداء بتطريز ورود ناعم وخياطة نظيفة. مناسبة للجامعة والدوام والمناسبات."
+    sizes: ["S","M","L","XL"],
+    images: ["assets/products/abaya-with-flowers.png"],
+    description: "عباية سوداء بتطريز ورود...",
+    // NEW ↓↓↓
+    tags: ["new", "popular"],   // show in both sections
+    rankNew: 1,                 // lower = earlier in "new"
+    rankPopular: 2              // lower = earlier in "popular"
   },
   {
     id: "ab02",
     title: "عباية سادة — موكا",
-    price: 18.00,
+    price: 79.00,
     category: "عبايات",
     colors: ["موكا"],
-    sizes: ["S", "M", "L", "XL"],
-    images: ["abaya-with-flowers.png"], // مؤقتًا نفس الصورة
-    description: "قماش ناعم وانسيابي للاستخدام اليومي المريح."
-  }
+    sizes: ["S","M","L","XL"],
+    images: ["assets/products/abaya-with-flowers.png"],
+    description: "قماش ناعم وانسيابي...",
+    // NEW ↓↓↓
+    tags: ["popular"],          // only in "popular"
+    rankPopular: 1
+  },
+  // ...
 ];
