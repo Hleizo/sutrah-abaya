@@ -7,7 +7,7 @@ window.PRODUCTS = [
     category: "عبايات",
     colors: ["أسود"],
     sizes: ["S", "M", "L", "XL"],
-    images: ["assets/products/abaya-with-flowers.png"],
+    images: ["abaya-2.png"],
     description: "عباية سوداء بتطريز ورود ناعم وخياطة نظيفة. مناسبة للجامعة والدوام والمناسبات."
   },
   {
