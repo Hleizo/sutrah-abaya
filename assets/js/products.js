@@ -9,7 +9,7 @@ window.PRODUCTS = [
     images: ["assets/products/abaya-with-flowers.png"],
     description: "عباية سوداء بتطريز ورود...",
     // NEW ↓↓↓
-    tags: ["new", "popular"],   // show in both sections
+    tags: ["new"],   // show in both sections
     rankNew: 1,                 // lower = earlier in "new"
     rankPopular: 2              // lower = earlier in "popular"
   },
