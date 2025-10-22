@@ -1,75 +1,81 @@
 /* Sutrah Abaya — Arabic SPA (RTL) v2
-   Upgrades:
-   - Better cart (steppers + sticky summary)
-   - WhatsApp checkout with Google Maps *directions* link
-   - CliQ "pay to phone" option (same number)
-   - Cleaner Arabic UI
+   - Modern product gallery (thumbnails + arrows + swipe)
+   - WhatsApp checkout with Google Maps directions
+   - CliQ pay-to-phone option
+   - Clean Arabic UI
 */
-
 (() => {
+  // ====== helpers ======
   const $  = (sel, ctx=document) => ctx.querySelector(sel);
   const $$ = (sel, ctx=document) => [...ctx.querySelectorAll(sel)];
 
-  const app = $("#app");
-  const toast = $("#toast");
+  const app       = $("#app");
+  const toast     = $("#toast");
   const cartCount = $("#cart-count");
 
-  // ==== Settings ====
-  const PHONE_E164 = "962795178746";        // بدون +
+  // ====== settings ======
+  const PHONE_E164 = "962795178746"; // (no +)
   const PHONE_READ = "+962 79 517 8746";
-  const INSTA = "https://www.instagram.com/sutrah_abayajo";
+  const INSTA      = "https://www.instagram.com/sutrah_abayajo";
 
+  // ====== state ======
   const state = {
-    cart: load("cart", []),                   // [{id, size, color, qty}]
-    filters: { q:"", cat:"الكل", sort:"popular" },
+    cart: load("cart", []),             // [{id,size,color,qty}]
+    filters: { q: "", cat: "الكل", sort: "popular" },
     lastCoords: null
   };
 
   function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
-  function load(k, f){ try{ return JSON.parse(localStorage.getItem(k)) ?? f }catch{ return f } }
+  function load(k, f){ try{ return JSON.parse(localStorage.getItem(k)) ?? f } catch { return f; } }
   function money(n){ return "د.أ " + Number(n||0).toFixed(2); }
   function copy(text){ navigator.clipboard?.writeText(text); showToast("تم النسخ ✅"); }
 
   function showToast(msg){
+    if(!toast) return;
     toast.textContent = msg;
     toast.classList.add("show");
     setTimeout(()=> toast.classList.remove("show"), 2200);
   }
 
-  // Footer year
+  // footer year
   (function(){ const y=$("#year"); if(y) y.textContent=new Date().getFullYear(); })();
 
-  // Reveal on scroll
-  const io = new IntersectionObserver((ents)=> ents.forEach(e=> e.isIntersecting && e.target.classList.add("in")), {threshold:.12});
+  // reveal on scroll
+  const io = new IntersectionObserver(
+    (ents)=> ents.forEach(e=> e.isIntersecting && e.target.classList.add("in")),
+    {threshold:.12}
+  );
   const withReveal = el => { el.classList.add("reveal"); io.observe(el); return el; };
 
-  // ==== CART ====
-  const keyOf = it => `${it.id}-${it.size||'NA'}-${it.color||'NA'}`;
-  const getCartQty = () => state.cart.reduce((a,i)=>a + Number(i.qty||0), 0);
-  function updateCartCount(){ cartCount.textContent = getCartQty(); }
+  // ====== cart ======
+  const keyOf = it => `${it.id}-${it.size||"NA"}-${it.color||"NA"}`;
+  const getCartQty = () => state.cart.reduce((a,i)=> a + Number(i.qty||0), 0);
+  function updateCartCount(){ if(cartCount) cartCount.textContent = getCartQty(); }
   updateCartCount();
 
   function addToCart(item){
-    const k = keyOf(item);
-    const ex = state.cart.find(i=> keyOf(i)===k);
-    if(ex){ ex.qty += item.qty || 1; }
-    else state.cart.push({ ...item, qty: item.qty || 1 });
-    save("cart", state.cart); updateCartCount(); showToast("أُضيفت للسلة");
+    const k  = keyOf(item);
+    const ex = state.cart.find(i => keyOf(i)===k);
+    if(ex) ex.qty += item.qty || 1;
+    else   state.cart.push({ ...item, qty: item.qty || 1 });
+    save("cart", state.cart);
+    updateCartCount();
+    showToast("أُضيفت للسلة");
   }
   function removeFromCart(i){ state.cart.splice(i,1); save("cart", state.cart); updateCartCount(); render(); }
   function setQty(i, qty){ state.cart[i].qty = Math.max(1, qty|0); save("cart", state.cart); updateCartCount(); render(); }
 
-  // ==== ROUTER ====
+  // ====== router ======
   const routes = {
-    "/": viewHome,
-    "/shop": viewShop,
-    "/product/:id": viewProduct,
-    "/cart": viewCart,
-    "/checkout": viewCheckout,
-    "/about": viewAbout,
+    "/":                   viewHome,
+    "/shop":               viewShop,
+    "/product/:id":        viewProduct,
+    "/cart":               viewCart,
+    "/checkout":           viewCheckout,
+    "/about":              viewAbout,
     "/delivery-palestine": viewDeliveryPS,
-    "/policy/:slug": viewPolicy,
-    "/contact": viewContact
+    "/policy/:slug":       viewPolicy,
+    "/contact":            viewContact
   };
 
   function parseHash(){
@@ -83,8 +89,11 @@
       const p = pattern.split("/").filter(Boolean);
       if(p.length !== segments.length) continue;
       let params = {};
-      let ok = p.every((seg, i)=>{
-        if(seg.startsWith(":")){ params[seg.slice(1)] = decodeURIComponent(segments[i]); return true; }
+      const ok = p.every((seg,i)=>{
+        if(seg.startsWith(":")){
+          params[seg.slice(1)] = decodeURIComponent(segments[i]);
+          return true;
+        }
         return seg === segments[i];
       });
       if(ok) return { view: routes[pattern], params };
@@ -94,27 +103,7 @@
   window.addEventListener("hashchange", render);
   document.addEventListener("DOMContentLoaded", render);
 
-  // ------------------------------------------------------------------
-  // HOME helpers (popular/new sections) — controlled by product.tags
-  // ------------------------------------------------------------------
-  function pickByTag(tag, rankKey, limit){
-    const list = (window.PRODUCTS || []).filter(p => (p.tags||[]).includes(tag));
-    return list.slice().sort((a,b)=> (a[rankKey]??999) - (b[rankKey]??999)).slice(0, limit);
-  }
-  function renderGridHome(containerId, products){
-    const el = document.getElementById(containerId);
-    if(!el) return;
-    el.innerHTML = "";
-    products.forEach(p => el.appendChild(productCard(p)));
-  }
-  function fillHome(){
-    // choose what shows on the home page
-    renderGridHome("home-trending", pickByTag("popular", "rankPopular", 8));
-    renderGridHome("home-new",      pickByTag("new",     "rankNew",     8));
-  }
-
-  // ==== VIEWS ====
-
+  // ====== views ======
   function viewHome(){
     app.innerHTML = `
       <section class="hero floaters">
@@ -128,7 +117,7 @@
           </div>
         </div>
         <div aria-hidden="true">
-          <img src="${PRODUCTS[0].images[0]}" alt="" style="border-radius:16px; box-shadow:var(--shadow)">
+          <img src="${PRODUCTS[0]?.images?.[0] || ""}" alt="" style="border-radius:16px; box-shadow:var(--shadow)">
         </div>
       </section>
 
@@ -144,8 +133,11 @@
         <div class="grid" id="home-new"></div>
       </section>
     `;
-    // ⬇️ render by tags (instead of dumping everything)
-    fillHome();
+
+    // simple fill (you can change to tag-based later if you want)
+    const t = $("#home-trending"), n = $("#home-new");
+    PRODUCTS.slice(0, 4).forEach(p => t.append(productCard(p)));
+    PRODUCTS.slice().reverse().slice(0, 4).forEach(p => n.append(productCard(p)));
     $$(".section").forEach(withReveal);
   }
 
@@ -154,10 +146,10 @@
     el.className = "card";
     el.innerHTML = `
       <a href="#/product/${encodeURIComponent(p.id)}" class="media" aria-label="${p.title}">
-        <img loading="lazy" src="${p.images[0]}" alt="${p.title}" />
+        <img loading="lazy" src="${p.images?.[0] || ""}" alt="${p.title}" />
       </a>
       <div class="info">
-        <div class="muted">${p.category}</div>
+        <div class="muted">${p.category || ""}</div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
           <h3 style="margin:.2rem 0;font-size:1.05rem">${p.title}</h3>
           <div class="price">${money(p.price)}</div>
@@ -168,8 +160,8 @@
         </div>
       </div>
     `;
-    el.querySelector('[data-quick]').addEventListener('click', ()=>{
-      addToCart({ id:p.id, size:p.sizes[0], color:p.colors[0], qty:1 });
+    el.querySelector('[data-quick]').addEventListener("click", ()=>{
+      addToCart({ id:p.id, size:p.sizes?.[0], color:p.colors?.[0], qty:1 });
     });
     return withReveal(el);
   }
@@ -186,17 +178,17 @@
           </select>
           <select id="sort">
             <option value="popular" ${state.filters.sort==="popular"?"selected":""}>الأشهر</option>
-            <option value="low" ${state.filters.sort==="low"?"selected":""}>السعر: من الأقل</option>
-            <option value="high" ${state.filters.sort==="high"?"selected":""}>السعر: من الأعلى</option>
-            <option value="new" ${state.filters.sort==="new"?"selected":""}>الأحدث</option>
+            <option value="low"     ${state.filters.sort==="low"?"selected":""}>السعر: من الأقل</option>
+            <option value="high"    ${state.filters.sort==="high"?"selected":""}>السعر: من الأعلى</option>
+            <option value="new"     ${state.filters.sort==="new"?"selected":""}>الأحدث</option>
           </select>
         </div>
         <div class="grid" id="shop-grid" style="margin-top:14px"></div>
       </section>
     `;
-    $("#q").addEventListener("input", (e)=>{ state.filters.q = e.target.value.trim(); renderShopGrid(); });
-    $("#cat").addEventListener("change",(e)=>{ state.filters.cat = e.target.value; renderShopGrid(); });
-    $("#sort").addEventListener("change",(e)=>{ state.filters.sort = e.target.value; renderShopGrid(); });
+    $("#q").addEventListener("input",  e=>{ state.filters.q   = e.target.value.trim(); renderShopGrid(); });
+    $("#cat").addEventListener("change",e=>{ state.filters.cat  = e.target.value;     renderShopGrid(); });
+    $("#sort").addEventListener("change",e=>{ state.filters.sort = e.target.value;     renderShopGrid(); });
     renderShopGrid();
   }
 
@@ -205,12 +197,12 @@
     const { q, cat, sort } = state.filters;
     let items = PRODUCTS.filter(p=>{
       const okCat = cat==="الكل" || p.category===cat;
-      const okQ = !q || (p.title.includes(q) || p.description.includes(q));
+      const okQ   = !q || (p.title?.includes(q) || p.description?.includes(q));
       return okCat && okQ;
     });
-    if(sort==="low") items.sort((a,b)=> a.price - b.price);
+    if(sort==="low")  items.sort((a,b)=> a.price - b.price);
     if(sort==="high") items.sort((a,b)=> b.price - a.price);
-    if(sort==="new") items = items.slice().reverse();
+    if(sort==="new")  items = items.slice().reverse();
     g.innerHTML = ""; items.forEach(p=> g.append(productCard(p)));
   }
 
@@ -219,55 +211,40 @@
     if(!p){ app.innerHTML = `<section class="section"><p>المنتج غير موجود.</p></section>`; return; }
 
     app.innerHTML = `
-// inside app.innerHTML = `...`
-<section class="product section">
-  <div class="gallery pro-gallery" data-idx="0">
-    <figure class="pro-main">
-      <img id="g-main" src="${p.images[0]}" alt="${p.title}">
-      <button class="nav prev" type="button" aria-label="السابق">‹</button>
-      <button class="nav next" type="button" aria-label="التالي">›</button>
-    </figure>
-
-    <div class="pro-thumbs" id="g-thumbs">
-      ${p.images.map((src,i)=>`
-        <button class="thumb ${i===0?'is-active':''}" data-i="${i}" type="button">
-          <img src="${src}" alt="صورة ${i+1} — ${p.title}">
-        </button>
-      `).join("")}
-    </div>
-  </div>
-
-  <div class="details">
-    <div class="pill">${p.category}</div>
-    <h1 style="margin:.5rem 0 0">${p.title}</h1>
-    <p class="muted">${p.description}</p>
-    <h3 class="price" style="margin:.2rem 0 10px">${money(p.price)}</h3>
-
-    <!-- (keep your existing options / add-to-cart markup exactly as it is) -->
-    ...
-  </div>
-</section>
-
-            ${p.images.map((src,i)=>`<img data-src="${src}" alt="صورة ${i+1} - ${p.title}" ${i===0?'style="outline:2px solid var(--rose)"':''} />`).join("")}
+      <section class="product section">
+        <!-- Modern gallery -->
+        <div class="gallery pro-gallery" data-idx="0">
+          <figure class="pro-main">
+            <img id="g-main" src="${p.images?.[0] || ""}" alt="${p.title}">
+            <button class="nav prev" type="button" aria-label="السابق">‹</button>
+            <button class="nav next" type="button" aria-label="التالي">›</button>
+          </figure>
+          <div class="pro-thumbs" id="g-thumbs">
+            ${ (p.images || []).map((src,i)=>`
+              <button class="thumb ${i===0?'is-active':''}" data-i="${i}" type="button">
+                <img src="${src}" alt="صورة ${i+1} — ${p.title}">
+              </button>
+            `).join("") }
           </div>
         </div>
+
         <div class="details">
-          <div class="pill">${p.category}</div>
+          <div class="pill">${p.category || ""}</div>
           <h1 style="margin:.5rem 0 0">${p.title}</h1>
-          <p class="muted">${p.description}</p>
+          <p class="muted">${p.description || ""}</p>
           <h3 class="price" style="margin:.2rem 0 10px">${money(p.price)}</h3>
 
           <div class="options">
             <div>
               <div class="muted" style="margin-bottom:6px">اللون</div>
               <div class="swatches" id="color-sw">
-                ${p.colors.map((c,i)=>`<button class="swatch" aria-pressed="${i===0?'true':'false'}">${c}</button>`).join("")}
+                ${ (p.colors || []).map((c,i)=>`<button class="swatch" aria-pressed="${i===0?'true':'false'}">${c}</button>`).join("") }
               </div>
             </div>
             <div>
               <div class="muted" style="margin-bottom:6px">المقاس</div>
               <div class="sizes" id="size-sw">
-                ${p.sizes.map((s,i)=>`<button class="size" aria-pressed="${i===0?'true':'false'}">${s}</button>`).join("")}
+                ${ (p.sizes || []).map((s,i)=>`<button class="size" aria-pressed="${i===0?'true':'false'}">${s}</button>`).join("") }
               </div>
             </div>
             <div class="qty">
@@ -282,13 +259,32 @@
         </div>
       </section>
     `;
-    $$(".thumbs img").forEach(img=>{
-      img.addEventListener("click", ()=>{
-        $("#main-img").src = img.dataset.src;
-        $$(".thumbs img").forEach(x=> x.style.outline="none");
-        img.style.outline = "2px solid var(--rose)";
-      })
-    });
+
+    // ---- gallery controller
+    let cur = 0;
+    const main  = $("#g-main");
+    const tBtns = $$("#g-thumbs .thumb");
+    function setImg(i){
+      const len = (p.images || []).length || 1;
+      cur = (i + len) % len;
+      main.src = p.images[cur];
+      tBtns.forEach(b => b.classList.remove("is-active"));
+      if(tBtns[cur]) tBtns[cur].classList.add("is-active");
+    }
+    tBtns.forEach(b => b.addEventListener("click", () => setImg(parseInt(b.dataset.i,10))));
+    $(".pro-main .prev").addEventListener("click", () => setImg(cur - 1));
+    $(".pro-main .next").addEventListener("click", () => setImg(cur + 1));
+    const onKey = (e)=>{ if(e.key==="ArrowLeft") setImg(cur-1); if(e.key==="ArrowRight") setImg(cur+1); };
+    document.addEventListener("keydown", onKey);
+
+    let sx=0;
+    main.addEventListener("touchstart", e => sx = e.touches[0].clientX, {passive:true});
+    main.addEventListener("touchend",   e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      if(Math.abs(dx) > 40) setImg(cur + (dx < 0 ? 1 : -1));
+    }, {passive:true});
+
+    // option selectors
     $("#color-sw").addEventListener("click", (e)=>{
       if(e.target.classList.contains("swatch")){
         $$("#color-sw .swatch").forEach(b=> b.setAttribute("aria-pressed","false"));
@@ -302,33 +298,36 @@
       }
     });
     $("#add").addEventListener("click", ()=>{
-      const c = $("#color-sw .swatch[aria-pressed='true']").textContent;
-      const s = $("#size-sw .size[aria-pressed='true']").textContent;
+      const c = $("#color-sw .swatch[aria-pressed='true']")?.textContent || p.colors?.[0];
+      const s = $("#size-sw .size[aria-pressed='true']")?.textContent   || p.sizes?.[0];
       const q = parseInt($("#qty").value || "1", 10);
       addToCart({ id: p.id, color: c, size: s, qty: q });
     });
+
     withReveal($(".product"));
   }
 
   function viewCart(){
-    const items = state.cart.map(ci => {
+    const items = state.cart.map(ci=>{
       const prod = PRODUCTS.find(p=> p.id===ci.id) || { price:0, title:"غير معروف", images:[""] };
       return { ...ci, prod, line: prod.price * ci.qty };
     });
     const subtotal = items.reduce((a,i)=> a + i.line, 0);
     const shipping = items.length ? 3.00 : 0;
-    const total = subtotal + shipping;
+    const total    = subtotal + shipping;
 
     app.innerHTML = `
       <section class="section">
         <h2>السلة</h2>
-        ${!items.length ? `<p class="lead">السلة فارغة. <a class="btn" href="#/shop">ابدئي التسوّق</a></p>` : `
+        ${!items.length ? `
+          <p class="lead">السلة فارغة. <a class="btn" href="#/shop">ابدئي التسوّق</a></p>
+        ` : `
           <div style="display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:start">
             <div class="card" style="overflow:auto">
               <table class="table">
                 <thead><tr><th>المنتج</th><th>الخيارات</th><th>الكمية</th><th>المجموع</th><th></th></tr></thead>
                 <tbody>
-                  ${items.map((it, i)=>`
+                  ${items.map((it,i)=>`
                     <tr>
                       <td style="display:flex; gap:10px; align-items:center">
                         <img src="${it.prod.images[0]}" alt="">
@@ -349,7 +348,6 @@
                 </tbody>
               </table>
             </div>
-
             <div class="summary">
               <div class="box">
                 <div style="display:flex; justify-content:space-between"><span class="muted">الإجمالي الفرعي</span><strong>${money(subtotal)}</strong></div>
@@ -364,17 +362,13 @@
     `;
     $$("button[data-rm]").forEach(b=> b.addEventListener("click", ()=> removeFromCart(parseInt(b.dataset.rm,10))));
     $$("input[data-qty]").forEach(inp=> inp.addEventListener("change", ()=> setQty(parseInt(inp.dataset.qty,10), parseInt(inp.value||"1",10))));
-    $$("button[data-minus]").forEach(b=> b.addEventListener("click", ()=> {
-      const i=parseInt(b.dataset.minus,10); setQty(i, state.cart[i].qty - 1);
-    }));
-    $$("button[data-plus]").forEach(b=> b.addEventListener("click", ()=> {
-      const i=parseInt(b.dataset.plus,10); setQty(i, state.cart[i].qty + 1);
-    }));
+    $$("button[data-minus]").forEach(b=> b.addEventListener("click", ()=> { const i=parseInt(b.dataset.minus,10); setQty(i, state.cart[i].qty - 1); }));
+    $$("button[data-plus]").forEach(b=> b.addEventListener("click",  ()=> { const i=parseInt(b.dataset.plus,10);  setQty(i, state.cart[i].qty + 1); }));
   }
 
-  // ==== CHECKOUT (WhatsApp + CliQ + Google Maps directions) ====
+  // ====== checkout (WhatsApp + CliQ + Maps directions) ======
   function viewCheckout(){
-    const items = state.cart.map(ci => {
+    const items = state.cart.map(ci=>{
       const prod = PRODUCTS.find(p=> p.id===ci.id) || { price:0, title:"غير معروف", images:[""] };
       return { ...ci, prod, line: prod.price * ci.qty };
     });
@@ -382,51 +376,16 @@
 
     const subtotal = items.reduce((a,i)=> a + i.line, 0);
     const shipping = 3.00;
-    const total = subtotal + shipping;
+    const total    = subtotal + shipping;
 
     app.innerHTML = `
-    // --- Improved gallery controller ---
-let cur = 0;
-const main = $("#g-main");
-const tBtns = $$("#g-thumbs .thumb");
-
-function setImg(i){
-  const len = p.images.length;
-  cur = (i + len) % len;
-  main.src = p.images[cur];
-  tBtns.forEach(b => b.classList.remove("is-active"));
-  tBtns[cur].classList.add("is-active");
-}
-
-// thumbs click
-tBtns.forEach(b => b.addEventListener("click", () => setImg(parseInt(b.dataset.i,10))));
-
-// arrows
-$(".pro-main .prev").addEventListener("click", () => setImg(cur - 1));
-$(".pro-main .next").addEventListener("click", () => setImg(cur + 1));
-
-// keyboard
-const onKey = (e) => {
-  if (e.key === "ArrowLeft")  setImg(cur - 1);
-  if (e.key === "ArrowRight") setImg(cur + 1);
-};
-document.addEventListener("keydown", onKey);
-
-// touch swipe
-let sx = 0;
-main.addEventListener("touchstart", e => sx = e.touches[0].clientX, {passive:true});
-main.addEventListener("touchend", e => {
-  const dx = e.changedTouches[0].clientX - sx;
-  if(Math.abs(dx) > 40) setImg(cur + (dx < 0 ? 1 : -1));
-}, {passive:true});
-
       <section class="section">
         <h2>إتمام الطلب</h2>
         <div class="checkout">
           <form id="co" class="check-card">
             <div class="step">١ • بيانات الشحن</div>
             <div class="form-row" style="margin-top:8px">
-              <input name="name" placeholder="الاسم الكامل" required />
+              <input name="name"  placeholder="الاسم الكامل" required />
               <input name="phone" class="ltr" placeholder="الهاتف" required />
             </div>
             <div class="form-row">
@@ -434,7 +393,7 @@ main.addEventListener("touchend", e => {
             </div>
             <div class="form-row">
               <button id="open-maps" class="btn" type="button">فتح الخريطة</button>
-              <button id="myloc" class="btn" type="button">استخدمي موقعي</button>
+              <button id="myloc"     class="btn" type="button">استخدمي موقعي</button>
             </div>
             <div class="mapbox">
               <iframe id="gmap" loading="lazy" src="https://www.google.com/maps?q=Amman%20Jordan&output=embed" allowfullscreen></iframe>
@@ -486,7 +445,8 @@ main.addEventListener("touchend", e => {
                       <div><div style="font-weight:700">${it.prod.title}</div><small class="muted">${it.color || "-"} / ${it.size || "-"}</small></div>
                     </td>
                     <td style="text-align:end">${money(it.line)}</td>
-                  </tr>`).join("")}
+                  </tr>
+                `).join("")}
                 <tr><td class="muted">الإجمالي الفرعي</td><td style="text-align:end">${money(subtotal)}</td></tr>
                 <tr><td class="muted">الشحن</td><td style="text-align:end">${money(shipping)}</td></tr>
                 <tr><td><strong>الإجمالي</strong></td><td style="text-align:end"><strong>${money(total)}</strong></td></tr>
@@ -497,16 +457,16 @@ main.addEventListener("touchend", e => {
       </section>
     `;
 
-    const addr = $("#addr");
-    const gmap = $("#gmap");
-    const waBtn = $("#wa-btn");
-    const paymentRadios = $$("input[name='pay']");
-    const cliqBox = $("#cliq-box");
+    const addr           = $("#addr");
+    const gmap           = $("#gmap");
+    const waBtn          = $("#wa-btn");
+    const paymentRadios  = $$("input[name='pay']");
+    const cliqBox        = $("#cliq-box");
     $("#copy-cliq")?.addEventListener("click", ()=> copy(PHONE_READ));
 
-    // Toggle CliQ box
+    // toggle cliq box
     paymentRadios.forEach(r =>
-      r.addEventListener("change", ()=> cliqBox.style.display = r.value==="cliq" && r.checked ? "block" : "none")
+      r.addEventListener("change", ()=> cliqBox.style.display = (r.value==="cliq" && r.checked) ? "block" : "none")
     );
 
     function mapsDirectionsLink(){
@@ -517,16 +477,44 @@ main.addEventListener("touchend", e => {
       const q = addr.value.trim() || "Amman Jordan";
       return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
     }
-
     function updateMap(q){
       gmap.src = "https://www.google.com/maps?q=" + encodeURIComponent(q || "Amman Jordan") + "&output=embed";
     }
 
+    $("#open-maps").addEventListener("click", ()=> window.open(mapsDirectionsLink(), "_blank"));
+    addr.addEventListener("change", ()=> updateMap(addr.value));
+
+    $("#myloc").addEventListener("click", ()=>{
+      if(!navigator.geolocation){ showToast("المتصفح لا يدعم تحديد الموقع"); return; }
+      navigator.geolocation.getCurrentPosition(
+        pos=>{
+          state.lastCoords = pos.coords;
+          const { latitude, longitude } = pos.coords;
+          updateMap(`${latitude},${longitude}`);
+          if(!addr.value) addr.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        },
+        ()=> showToast("تعذر الحصول على الموقع")
+      );
+    });
+
+    const form = $("#co");
+    const setLinks = ()=> { waBtn.href = buildWhatsAppLink(form); };
+    form.addEventListener("input", setLinks);
+    setLinks();
+
+    form.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      window.open(buildWhatsAppLink(form), "_blank");
+      showToast("تم إرسال الطلب إلى واتساب ✅");
+      state.cart = []; save("cart", state.cart); updateCartCount();
+      setTimeout(()=> location.hash = "#/", 600);
+    });
+
     function buildWhatsAppLink(form){
-      const name = form.name.value.trim();
-      const phone = form.phone.value.trim();
+      const name    = form.name.value.trim();
+      const phone   = form.phone.value.trim();
       const address = form.address.value.trim();
-      const note = (form.note.value || "").trim();
+      const note    = (form.note.value || "").trim();
 
       const lines = [];
       lines.push("طلب جديد من موقع سترة ✨");
@@ -545,8 +533,9 @@ main.addEventListener("touchend", e => {
         if(!p) return;
         lines.push(`• ${p.title} — لون: ${ci.color || "-"}، مقاس: ${ci.size || "-"} × ${ci.qty}`);
       });
-      const subtotal = state.cart.reduce((a,ci)=> {
-        const p = PRODUCTS.find(pp=> pp.id===ci.id); return a + (p?p.price:0)*ci.qty;
+      const subtotal = state.cart.reduce((a,ci)=>{
+        const p = PRODUCTS.find(pp=> pp.id===ci.id);
+        return a + ((p?.price||0) * ci.qty);
       }, 0);
       const shipping = state.cart.length ? 3.00 : 0;
       lines.push("");
@@ -554,44 +543,17 @@ main.addEventListener("touchend", e => {
       lines.push(`الشحن: ${money(shipping)}`);
       lines.push(`الإجمالي: ${money(subtotal + shipping)}`);
       lines.push("");
+
       const paySel = $$("input[name='pay']").find(x=>x.checked)?.value;
       if(paySel==="cliq"){
         lines.push(`طريقة الدفع: CliQ إلى ${PHONE_READ}`);
       } else {
         lines.push("طريقة الدفع: عند الاستلام (ترتيب عبر واتساب)");
       }
+
       const text = encodeURIComponent(lines.join("\n"));
       return `https://wa.me/${PHONE_E164}?text=${text}`;
     }
-
-    $("#open-maps").addEventListener("click", ()=> window.open(mapsDirectionsLink(), "_blank"));
-    addr.addEventListener("change", ()=> updateMap(addr.value));
-    $("#myloc").addEventListener("click", ()=>{
-      if(!navigator.geolocation){ showToast("المتصفح لا يدعم تحديد الموقع"); return; }
-      navigator.geolocation.getCurrentPosition(
-        pos=>{
-          state.lastCoords = pos.coords;
-          const { latitude, longitude } = pos.coords;
-          updateMap(`${latitude},${longitude}`);
-          if(!addr.value) addr.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-        },
-        ()=> showToast("تعذر الحصول على الموقع")
-      );
-    });
-
-    // Live links
-    const form = $("#co");
-    const setLinks = ()=> { waBtn.href = buildWhatsAppLink(form); };
-    form.addEventListener("input", setLinks);
-    setLinks();
-
-    form.addEventListener("submit", (e)=>{
-      e.preventDefault();
-      window.open(buildWhatsAppLink(form), "_blank");
-      showToast("تم إرسال الطلب إلى واتساب ✅");
-      state.cart = []; save("cart", state.cart); updateCartCount();
-      setTimeout(()=> location.hash = "#/", 600);
-    });
   }
 
   function viewAbout(){
@@ -622,7 +584,7 @@ main.addEventListener("touchend", e => {
             <li>التكلفة: <strong>د.أ 3</strong> — مجاناً للطلبات فوق <strong>د.أ 100</strong>.</li>
             <li>الدفع: عند الاستلام، واتساب، أو CliQ على نفس الرقم.</li>
           </ul>
-          <a class="whats-btn" href="https://wa.me/${PHONE_E164}?text=${encodeURIComponent('أرغب بالتوصيل إلى فلسطين، ما الخيارات المتاحة؟')}" target="_blank" rel="noopener">اسألي عبر واتساب</a>
+          <a class="whats-btn" href="https://wa.me/${PHONE_E164}?text=${encodeURIComponent("أرغب بالتوصيل إلى فلسطين، ما الخيارات المتاحة؟")}" target="_blank" rel="noopener">اسألي عبر واتساب</a>
         </div>
       </section>
     `;
@@ -667,7 +629,7 @@ main.addEventListener("touchend", e => {
   function render(){
     const { view, params } = matchRoute();
     view(params);
-    app.focus({preventScroll:true});
+    app?.focus?.({preventScroll:true});
     $$('[data-link]').forEach(a=> a.addEventListener('click', e=>{
       e.preventDefault(); location.hash = a.getAttribute('href');
     }));
@@ -686,18 +648,17 @@ main.addEventListener("touchend", e => {
   const HIDE_DELTA = 8;
 
   function onScroll(){
-    const y = window.scrollY;
+    const y  = window.scrollY;
     const dy = y - lastY;
 
     if(y > COMPACT_AT) bar.classList.add('is-scrolled','is-compact');
-    else bar.classList.remove('is-scrolled','is-compact');
+    else               bar.classList.remove('is-scrolled','is-compact');
 
     if(Math.abs(dy) > HIDE_DELTA && !revealLock){
       if(dy > 0 && y > COMPACT_AT) bar.classList.add('is-hidden');
-      else bar.classList.remove('is-hidden');
+      else                         bar.classList.remove('is-hidden');
     }
-
-    lastY = y;
+    lastY   = y;
     ticking = false;
   }
 
@@ -712,4 +673,4 @@ main.addEventListener("touchend", e => {
     }
   });
 })();
- 
+
