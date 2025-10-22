@@ -219,10 +219,35 @@
     if(!p){ app.innerHTML = `<section class="section"><p>المنتج غير موجود.</p></section>`; return; }
 
     app.innerHTML = `
-      <section class="product section">
-        <div class="gallery">
-          <div class="main"><img id="main-img" src="${p.images[0]}" alt="${p.title}"></div>
-          <div class="thumbs">
+// inside app.innerHTML = `...`
+<section class="product section">
+  <div class="gallery pro-gallery" data-idx="0">
+    <figure class="pro-main">
+      <img id="g-main" src="${p.images[0]}" alt="${p.title}">
+      <button class="nav prev" type="button" aria-label="السابق">‹</button>
+      <button class="nav next" type="button" aria-label="التالي">›</button>
+    </figure>
+
+    <div class="pro-thumbs" id="g-thumbs">
+      ${p.images.map((src,i)=>`
+        <button class="thumb ${i===0?'is-active':''}" data-i="${i}" type="button">
+          <img src="${src}" alt="صورة ${i+1} — ${p.title}">
+        </button>
+      `).join("")}
+    </div>
+  </div>
+
+  <div class="details">
+    <div class="pill">${p.category}</div>
+    <h1 style="margin:.5rem 0 0">${p.title}</h1>
+    <p class="muted">${p.description}</p>
+    <h3 class="price" style="margin:.2rem 0 10px">${money(p.price)}</h3>
+
+    <!-- (keep your existing options / add-to-cart markup exactly as it is) -->
+    ...
+  </div>
+</section>
+
             ${p.images.map((src,i)=>`<img data-src="${src}" alt="صورة ${i+1} - ${p.title}" ${i===0?'style="outline:2px solid var(--rose)"':''} />`).join("")}
           </div>
         </div>
@@ -360,6 +385,41 @@
     const total = subtotal + shipping;
 
     app.innerHTML = `
+    // --- Improved gallery controller ---
+let cur = 0;
+const main = $("#g-main");
+const tBtns = $$("#g-thumbs .thumb");
+
+function setImg(i){
+  const len = p.images.length;
+  cur = (i + len) % len;
+  main.src = p.images[cur];
+  tBtns.forEach(b => b.classList.remove("is-active"));
+  tBtns[cur].classList.add("is-active");
+}
+
+// thumbs click
+tBtns.forEach(b => b.addEventListener("click", () => setImg(parseInt(b.dataset.i,10))));
+
+// arrows
+$(".pro-main .prev").addEventListener("click", () => setImg(cur - 1));
+$(".pro-main .next").addEventListener("click", () => setImg(cur + 1));
+
+// keyboard
+const onKey = (e) => {
+  if (e.key === "ArrowLeft")  setImg(cur - 1);
+  if (e.key === "ArrowRight") setImg(cur + 1);
+};
+document.addEventListener("keydown", onKey);
+
+// touch swipe
+let sx = 0;
+main.addEventListener("touchstart", e => sx = e.touches[0].clientX, {passive:true});
+main.addEventListener("touchend", e => {
+  const dx = e.changedTouches[0].clientX - sx;
+  if(Math.abs(dx) > 40) setImg(cur + (dx < 0 ? 1 : -1));
+}, {passive:true});
+
       <section class="section">
         <h2>إتمام الطلب</h2>
         <div class="checkout">
