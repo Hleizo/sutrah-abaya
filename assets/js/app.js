@@ -14,6 +14,9 @@
   const toast = $("#toast");
   const cartCount = $("#cart-count");
 
+  // ---- ADD: safe stub so existing code using mapsBtn.href won't crash ----
+  const mapsBtn = document.createElement('a'); // harmless placeholder; not shown in UI
+
   // ==== Settings ====
   const PHONE_E164 = "962795178746";        // بدون +
   const PHONE_READ = "+962 79 517 8746";
@@ -125,7 +128,9 @@
         <div class="grid" id="home-new"></div>
       </section>
     `;
-   
+    const t = $("#home-trending"), n = $("#home-new");
+    PRODUCTS.slice(0,3).forEach(p=> t.append(productCard(p)));
+    PRODUCTS.slice().reverse().forEach(p=> n.append(productCard(p)));
     $$(".section").forEach(withReveal);
   }
 
@@ -446,9 +451,9 @@
     }
 
     function updateMap(q){
-  gmap.src = "https://www.google.com/maps?q=" + encodeURIComponent(q || "Amman Jordan") + "&output=embed";
-}
-
+      gmap.src = "https://www.google.com/maps?q=" + encodeURIComponent(q || "Amman Jordan") + "&output=embed";
+      // mapsBtn.href = mapsDirectionsLink();  // left as-is; stub above prevents crash
+    }
 
     function buildWhatsAppLink(form){
       const name = form.name.value.trim();
@@ -645,9 +650,12 @@ if(paySel==="cliq"){
       revealLock = true; setTimeout(()=> revealLock=false, 250);
     }
   });
-     onScroll();              // initialize state once
+
+  // ---- ADD: initialize & close the IIFE cleanly ----
+  onScroll();
 })();
-/* ===== Home sections by tags: "popular" & "new" (safe add-on) ===== */
+
+/* ===== ADD: Home sections by tags: "popular" & "new" (safe add-on) ===== */
 (function () {
   if (window.__homeByTagsInit) return;
   window.__homeByTagsInit = true;
@@ -660,11 +668,11 @@ if(paySel==="cliq"){
     return sortByRank(list, rankKey).slice(0, limit);
   }
 
-  // use your existing productCard() to keep styling
+  // re-use your productCard() to keep styling consistent
   function renderGridHome(containerId, list){
     const el = document.getElementById(containerId);
     if(!el) return;
-    el.innerHTML = "";
+    el.innerHTML = "";                 // clear whatever was there
     list.forEach(p => el.appendChild(productCard(p)));
   }
 
@@ -675,7 +683,6 @@ if(paySel==="cliq"){
     renderGridHome('home-new',      newest);
   }
 
-  // Fill on first load (when home is visible) and on navigation
   function tryFill(){
     if (document.getElementById('home-trending') || document.getElementById('home-new')) {
       fillHome();
@@ -685,7 +692,5 @@ if(paySel==="cliq"){
   else document.addEventListener('DOMContentLoaded', tryFill);
   window.addEventListener('hashchange', tryFill);
 })();
-
-
 
  
