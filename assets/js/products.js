@@ -30,7 +30,7 @@ window.PRODUCTS = [
     sizes: ["S","M","L","XL"],
     images: ["assets/products/abaya-with-flowers.png"],
     description: "قماش ناعم وانسيابي للاستخدام اليومي المريح.",
-    tags: [""],
+    tags: [],
     rankPopular: 1
   },
   {
