@@ -14,9 +14,6 @@
   const toast = $("#toast");
   const cartCount = $("#cart-count");
 
-  // ---- ADD: safe stub so existing code using mapsBtn.href won't crash ----
-  const mapsBtn = document.createElement('a'); // harmless placeholder; not shown in UI
-
   // ==== Settings ====
   const PHONE_E164 = "962795178746";        // بدون +
   const PHONE_READ = "+962 79 517 8746";
@@ -30,7 +27,7 @@
 
   function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
   function load(k, f){ try{ return JSON.parse(localStorage.getItem(k)) ?? f }catch{ return f } }
-  function money(n){ return "د.أ " + n.toFixed(2); }
+  function money(n){ return "د.أ " + Number(n||0).toFixed(2); }
   function copy(text){ navigator.clipboard?.writeText(text); showToast("تم النسخ ✅"); }
 
   function showToast(msg){
@@ -97,6 +94,25 @@
   window.addEventListener("hashchange", render);
   document.addEventListener("DOMContentLoaded", render);
 
+  // ------------------------------------------------------------------
+  // HOME helpers (popular/new sections) — controlled by product.tags
+  // ------------------------------------------------------------------
+  function pickByTag(tag, rankKey, limit){
+    const list = (window.PRODUCTS || []).filter(p => (p.tags||[]).includes(tag));
+    return list.slice().sort((a,b)=> (a[rankKey]??999) - (b[rankKey]??999)).slice(0, limit);
+  }
+  function renderGridHome(containerId, products){
+    const el = document.getElementById(containerId);
+    if(!el) return;
+    el.innerHTML = "";
+    products.forEach(p => el.appendChild(productCard(p)));
+  }
+  function fillHome(){
+    // choose what shows on the home page
+    renderGridHome("home-trending", pickByTag("popular", "rankPopular", 8));
+    renderGridHome("home-new",      pickByTag("new",     "rankNew",     8));
+  }
+
   // ==== VIEWS ====
 
   function viewHome(){
@@ -128,9 +144,8 @@
         <div class="grid" id="home-new"></div>
       </section>
     `;
-    const t = $("#home-trending"), n = $("#home-new");
-    PRODUCTS.slice(0,3).forEach(p=> t.append(productCard(p)));
-    PRODUCTS.slice().reverse().forEach(p=> n.append(productCard(p)));
+    // ⬇️ render by tags (instead of dumping everything)
+    fillHome();
     $$(".section").forEach(withReveal);
   }
 
@@ -353,7 +368,6 @@
             <div class="form-row" style="margin-top:8px">
               <input name="name" placeholder="الاسم الكامل" required />
               <input name="phone" class="ltr" placeholder="الهاتف" required />
-
             </div>
             <div class="form-row">
               <input id="addr" name="address" placeholder="العنوان (المدينة، الشارع، المبنى)" required />
@@ -367,43 +381,38 @@
             </div>
 
             <div class="step" style="margin-top:12px">٢ • طريقة الدفع</div>
-           <div class="pay-options form-row" aria-label="طريقة الدفع">
-  <label>
-    <input type="radio" name="pay" value="wa" checked>
-    واتساب — <span class="muted">الدفع عند الاستلام (تأكيد سريع)</span>
-  </label>
-  <label>
-    <input type="radio" name="pay" value="cliq">
-    CliQ — <span class="muted">تحويل على نفس الرقم</span>
-  </label>
-</div>
-
+            <div class="pay-options form-row" aria-label="طريقة الدفع">
+              <label>
+                <input type="radio" name="pay" value="wa" checked>
+                واتساب — <span class="muted">الدفع عند الاستلام (تأكيد سريع)</span>
+              </label>
+              <label>
+                <input type="radio" name="pay" value="cliq">
+                CliQ — <span class="muted">تحويل على نفس الرقم</span>
+              </label>
+            </div>
 
             <div id="cliq-box" class="cliq-clean" style="display:none">
-  <p class="notice-strong" style="margin:0 0 8px">حوّلي عبر CliQ على هذا الرقم:</p>
-  <div class="row">
-    <strong class="ltr">${PHONE_READ}</strong>
-    <button type="button" class="btn" id="copy-cliq">نسخ الرقم</button>
-    <span class="amount">المبلغ: ${money(total)}</span>
-  </div>
-  <p class="muted" style="margin:.6rem 0 0">
-    بعد التحويل، أرسلي لقطة الشاشة على واتساب لإتمام التأكيد وسيتم تجهيز الطلب مباشرة.
-  </p>
-</div>
-
-            
+              <p class="notice-strong" style="margin:0 0 8px">حوّلي عبر CliQ على هذا الرقم:</p>
+              <div class="row">
+                <strong class="ltr">${PHONE_READ}</strong>
+                <button type="button" class="btn" id="copy-cliq">نسخ الرقم</button>
+                <span class="amount">المبلغ: ${money(total)}</span>
+              </div>
+              <p class="muted" style="margin:.6rem 0 0">
+                بعد التحويل، أرسلي لقطة الشاشة على واتساب لإتمام التأكيد وسيتم تجهيز الطلب مباشرة.
+              </p>
+            </div>
 
             <div class="step" style="margin-top:12px">٣ • ملاحظات</div>
             <div class="form-row"><textarea name="note" rows="3" placeholder="ملاحظة للطلب (اختياري)"></textarea></div>
 
             <div class="form-row" style="margin-top:10px">
-  <a id="wa-btn" class="whats-btn big" href="#" target="_blank" rel="noopener">إرسال الطلب عبر واتساب</a>
-</div>
-<p class="muted under-cta-note">
-  سيُرسل الطلب إلى واتساب مع رابط اتجاهات جوجل مابس للوصول مباشرة.
-</p>
-
-
+              <a id="wa-btn" class="whats-btn big" href="#" target="_blank" rel="noopener">إرسال الطلب عبر واتساب</a>
+            </div>
+            <p class="muted under-cta-note">
+              سيُرسل الطلب إلى واتساب مع رابط اتجاهات جوجل مابس للوصول مباشرة.
+            </p>
           </form>
 
           <div class="check-card">
@@ -441,7 +450,6 @@
     );
 
     function mapsDirectionsLink(){
-      // Prefer GPS if user granted location
       if(state.lastCoords){
         const { latitude, longitude } = state.lastCoords;
         return `https://www.google.com/maps/dir/?api=1&destination=${latitude.toFixed(6)},${longitude.toFixed(6)}`;
@@ -452,7 +460,6 @@
 
     function updateMap(q){
       gmap.src = "https://www.google.com/maps?q=" + encodeURIComponent(q || "Amman Jordan") + "&output=embed";
-      // mapsBtn.href = mapsDirectionsLink();  // left as-is; stub above prevents crash
     }
 
     function buildWhatsAppLink(form){
@@ -488,13 +495,11 @@
       lines.push(`الإجمالي: ${money(subtotal + shipping)}`);
       lines.push("");
       const paySel = $$("input[name='pay']").find(x=>x.checked)?.value;
-if(paySel==="cliq"){
-  lines.push(`طريقة الدفع: CliQ إلى ${PHONE_READ}`);
-} else {
-  lines.push("طريقة الدفع: عند الاستلام (ترتيب عبر واتساب)");
-}
-
-
+      if(paySel==="cliq"){
+        lines.push(`طريقة الدفع: CliQ إلى ${PHONE_READ}`);
+      } else {
+        lines.push("طريقة الدفع: عند الاستلام (ترتيب عبر واتساب)");
+      }
       const text = encodeURIComponent(lines.join("\n"));
       return `https://wa.me/${PHONE_E164}?text=${text}`;
     }
@@ -522,10 +527,8 @@ if(paySel==="cliq"){
 
     form.addEventListener("submit", (e)=>{
       e.preventDefault();
-      // open WhatsApp with full message (includes maps directions)
       window.open(buildWhatsAppLink(form), "_blank");
       showToast("تم إرسال الطلب إلى واتساب ✅");
-      // Clear cart & go home
       state.cart = []; save("cart", state.cart); updateCartCount();
       setTimeout(()=> location.hash = "#/", 600);
     });
@@ -610,6 +613,7 @@ if(paySel==="cliq"){
     }));
   }
 })();
+
 // == Smart Topbar controller ==
 (function(){
   const bar = document.getElementById('topbar');
@@ -617,19 +621,17 @@ if(paySel==="cliq"){
 
   let lastY = window.scrollY;
   let ticking = false;
-  let revealLock = false;        // prevents flicker when revealing
-  const COMPACT_AT = 80;         // px to start shadow/compact
-  const HIDE_DELTA = 8;          // min movement to trigger
+  let revealLock = false;
+  const COMPACT_AT = 80;
+  const HIDE_DELTA = 8;
 
   function onScroll(){
     const y = window.scrollY;
     const dy = y - lastY;
 
-    // compact + shadow
     if(y > COMPACT_AT) bar.classList.add('is-scrolled','is-compact');
     else bar.classList.remove('is-scrolled','is-compact');
 
-    // down = hide, up = show
     if(Math.abs(dy) > HIDE_DELTA && !revealLock){
       if(dy > 0 && y > COMPACT_AT) bar.classList.add('is-hidden');
       else bar.classList.remove('is-hidden');
@@ -643,54 +645,11 @@ if(paySel==="cliq"){
     if(!ticking){ requestAnimationFrame(onScroll); ticking = true; }
   }, { passive:true });
 
-  // Desktop nicety: reveal if mouse touches top edge
   window.addEventListener('mousemove', (e)=>{
     if(e.clientY < 60){
       bar.classList.remove('is-hidden');
       revealLock = true; setTimeout(()=> revealLock=false, 250);
     }
   });
-
-  // ---- ADD: initialize & close the IIFE cleanly ----
-  onScroll();
 })();
-
-/* ===== ADD: Home sections by tags: "popular" & "new" (safe add-on) ===== */
-(function () {
-  if (window.__homeByTagsInit) return;
-  window.__homeByTagsInit = true;
-
-  function sortByRank(arr, key) {
-    return (arr || []).slice().sort((a,b) => ((a?.[key] ?? 999) - (b?.[key] ?? 999)));
-  }
-  function pickByTag(tag, rankKey, limit=8){
-    const list = (window.PRODUCTS || []).filter(p => (p.tags || []).includes(tag));
-    return sortByRank(list, rankKey).slice(0, limit);
-  }
-
-  // re-use your productCard() to keep styling consistent
-  function renderGridHome(containerId, list){
-    const el = document.getElementById(containerId);
-    if(!el) return;
-    el.innerHTML = "";                 // clear whatever was there
-    list.forEach(p => el.appendChild(productCard(p)));
-  }
-
-  function fillHome(){
-    const popular = pickByTag('popular', 'rankPopular', 8);
-    const newest  = pickByTag('new',     'rankNew',     8);
-    renderGridHome('home-trending', popular);
-    renderGridHome('home-new',      newest);
-  }
-
-  function tryFill(){
-    if (document.getElementById('home-trending') || document.getElementById('home-new')) {
-      fillHome();
-    }
-  }
-  if (document.readyState !== 'loading') tryFill();
-  else document.addEventListener('DOMContentLoaded', tryFill);
-  window.addEventListener('hashchange', tryFill);
-})();
-
  
