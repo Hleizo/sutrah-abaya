@@ -7,6 +7,13 @@
    Order inside a section is by rankNew / rankPopular (smaller = earlier).
 */
 
+/* بيانات المنتجات — سترة
+   ملاحظات مهمة:
+   - لتغيير مكان ظهور المنتج على الصفحة الرئيسية، عدّلي الحقل "tags".
+   - لإضافة أكثر من صورة لمنتج ما، ضيفي أكثر من مسار داخل مصفوفة images.
+   - رتّبي الظهور داخل كل قسم بواسطة rankPopular / rankNew (اختياري).
+*/
+
 window.PRODUCTS = [
   {
     id: "ab01",
@@ -15,12 +22,17 @@ window.PRODUCTS = [
     category: "عبايات",
     colors: ["أسود"],
     sizes: ["S","M","L","XL"],
-    images: ["abaya-with-flowers.png", "abaya-2.png"],
+    images: [
+      "assets/products/abaya-with-flowers.png",
+      // يمكن إضافة المزيد:
+      // "assets/products/abaya-with-flowers-2.png",
+      // "assets/products/abaya-with-flowers-3.png",
+    ],
     description: "عباية سوداء بتطريز ورود ناعم وخياطة نظيفة. مناسبة للجامعة والدوام والمناسبات.",
-    tags: ["new"],
-    rankNew: 1,
-    rankPopular: 2
+    tags: ["new"],     // ← يظهر فقط في 'وصل حديثاً'
+    rankNew: 1
   },
+
   {
     id: "ab02",
     title: "عباية سادة — موكا",
@@ -28,11 +40,14 @@ window.PRODUCTS = [
     category: "عبايات",
     colors: ["موكا"],
     sizes: ["S","M","L","XL"],
-    images: ["assets/products/abaya-with-flowers.png"],
+    images: [
+      "assets/products/abaya-mocha.png"
+    ],
     description: "قماش ناعم وانسيابي للاستخدام اليومي المريح.",
-    tags: ["new"],
+    tags: ["popular"], // ← يظهر فقط في 'الأكثر طلباً'
     rankPopular: 1
   },
+
   {
     id: "ab03",
     title: "عباية لف — أسود مطفي",
@@ -40,21 +55,14 @@ window.PRODUCTS = [
     category: "عبايات",
     colors: ["أسود"],
     sizes: ["S","M","L","XL"],
-    images: ["assets/products/abaya-with-flowers.png"],
-    description: "تصميم لف عملي مع قصة محافظة وانسيابية.",
-    tags: ["new"],
-    rankNew: 2
+    images: [
+      "assets/products/abaya-matte.png"
+    ],
+    description: "موديل لف عملي ومريح.",
+    tags: ["new","popular"], // ← يظهر في القسمين
+    rankNew: 2,
+    rankPopular: 3
   },
-  {
-    id: "ab04",
-    title: "طقم عباءة مع شيلة — كريمي",
-    price: 95.00,
-    category: "أطقم",
-    colors: ["كريمي"],
-    sizes: ["S","M","L","XL"],
-    images: ["assets/products/abaya-with-flowers.png"],
-    description: "طقم كامل مناسب للمناسبات والخروج الراقي.",
-    tags: [],           // hidden from both home sections
-    // no ranks needed
-  }
+
+  // أضيفي المزيد بنفس البنية ↑
 ];
