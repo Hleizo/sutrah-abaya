@@ -44,7 +44,7 @@ window.PRODUCTS = [
       "assets/products/abaya-mocha.png"
     ],
     description: "قماش ناعم وانسيابي للاستخدام اليومي المريح.",
-    tags: ["new"], // ← يظهر فقط في 'الأكثر طلباً'
+    tags: ["new","popular"], // ← يظهر فقط في 'الأكثر طلباً'
     rankPopular: 1
   },
 
