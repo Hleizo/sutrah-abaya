@@ -17,7 +17,7 @@ window.PRODUCTS = [
     sizes: ["S","M","L","XL"],
     images: ["assets/products/abaya-with-flowers.png"],
     description: "عباية سوداء بتطريز ورود ناعم وخياطة نظيفة. مناسبة للجامعة والدوام والمناسبات.",
-    tags: ["new""],
+    tags: ["new"],
     rankNew: 1,
     rankPopular: 2
   },
