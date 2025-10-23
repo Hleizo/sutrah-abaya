@@ -17,11 +17,11 @@
 window.PRODUCTS = [
   {
     id: "ab01",
-    title: "عباية مطرزة ورود — أسود",
+    title: "عباية ورود",
     price: 20.00,
     category: "عبايات",
     colors: ["أسود"],
-    sizes: ["S","M","L","XL"],
+    sizes: ["54","56","58"],
     images: [
       "price-20-first.png",
       // يمكن إضافة المزيد:
@@ -38,7 +38,7 @@ window.PRODUCTS = [
     title: "عباية سادة — موكا",
     price: 20.00,
     category: "عبايات",
-    colors: ["موكا"],
+    colors: ["بني"],
     sizes: ["S","M","L","XL"],
     images: ["price-10-second.png","price-20-4th.png"],
     description: "عباية بني ناعم بتطريز خرز أنيق من الكتف لأسفل ✨",
