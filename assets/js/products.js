@@ -125,7 +125,7 @@ window.PRODUCTS = [
     rankNew: 2,
     rankPopular: 3
   }
-
+   ];
 {
   id: "ab08",                   // مُعرّف فريد (لا تكرره)
   title: "اسم المنتج",
@@ -138,7 +138,6 @@ window.PRODUCTS = [
   tags: ["new"],               // "new" أو "popular" أو الاثنين أو اتركه فارغ []
   rankNew: 5,                  // اختياري
   rankPopular: 10              // اختياري
-},
-   
+},   
 ];
 
