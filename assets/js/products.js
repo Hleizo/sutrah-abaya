@@ -124,6 +124,22 @@ window.PRODUCTS = [
     tags: [],                     // لا تظهر في أقسام الرئيسية
     rankNew: 2,
     rankPopular: 3
+  },
+   
+    {
+    id: "ab08",
+    title: "عباية لف — أسود مطفي",
+    price: 20.00,
+    category: "عبايات",
+    colors: ["أسود"],
+    sizes: ["S","M","L","XL"],
+    images: [
+      "price-20-7th.png"
+    ],
+    description: "عباية إماراتية باللون البني موشحة بالفراشات البرونزية تعكس الاضاءة بسحر أنثوي",
+    tags: [],                     // لا تظهر في أقسام الرئيسية
+    rankNew: 2,
+    rankPopular: 3
   }
 ];
 
