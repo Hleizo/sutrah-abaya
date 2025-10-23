@@ -29,7 +29,7 @@ window.PRODUCTS = [
       // "assets/products/abaya-with-flowers-3.png",
     ],
     description: "عبـايـة بلـون زيتي غامق مائل للسكني ✨",
-    tags: ["new","popular"],     // تظهر في "وصل حديثاً" و"الأكثر طلباً"
+    tags: ["new"],     // تظهر في "وصل حديثاً" و"الأكثر طلباً"
     rankNew: 1
   },
 
