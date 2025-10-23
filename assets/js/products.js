@@ -124,8 +124,7 @@ window.PRODUCTS = [
     tags: [],                     // لا تظهر في أقسام الرئيسية
     rankNew: 2,
     rankPopular: 3
-  }
-   ];
+  },
 {
   id: "ab08",                   // مُعرّف فريد (لا تكرره)
   title: "اسم المنتج",
