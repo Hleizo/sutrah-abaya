@@ -133,5 +133,4 @@ window.PRODUCTS = [
     rankPopular: 3
   },
 
-  // أضيفي المزيد بنفس البنية ↑
-];
+
