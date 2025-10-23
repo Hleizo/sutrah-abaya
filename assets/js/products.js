@@ -40,7 +40,7 @@ window.PRODUCTS = [
     category: "عبايات",
     colors: ["موكا"],
     sizes: ["S","M","L","XL"],
-    images: ["price-20-second.png"],
+    images: ["price-10-second.png"],
     description: "عباية بني ناعم بتطريز خرز أنيق من الكتف لأسفل ✨",
     tags: ["popular","new"],     // تظهر في القسمين
     rankPopular: 1
