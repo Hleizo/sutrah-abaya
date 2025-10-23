@@ -125,6 +125,20 @@ window.PRODUCTS = [
     rankNew: 2,
     rankPopular: 3
   }
-];
 
+{
+  id: "ab08",                   // مُعرّف فريد (لا تكرره)
+  title: "اسم المنتج",
+  price: 00.00,
+  category: "عبايات",
+  colors: ["أسود"],
+  sizes: ["S","M","L","XL"],
+  images: ["your-image.png"],  // أضف المزيد عند الحاجة
+  description: "وصف قصير...",
+  tags: ["new"],               // "new" أو "popular" أو الاثنين أو اتركه فارغ []
+  rankNew: 5,                  // اختياري
+  rankPopular: 10              // اختياري
+},
+   
+];
 
